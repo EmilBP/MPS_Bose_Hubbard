@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor"
+CMAKE_SOURCE_DIR = /media/emil/TI31382600A/mps_github_repo
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = "/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor"
+CMAKE_BINARY_DIR = /media/emil/TI31382600A/mps_github_repo
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles" "/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles/progress.marks"
+	$(CMAKE_COMMAND) -E cmake_progress_start /media/emil/TI31382600A/mps_github_repo/CMakeFiles /media/emil/TI31382600A/mps_github_repo/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles" 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /media/emil/TI31382600A/mps_github_repo/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -124,19 +124,6 @@ MyLib/fast:
 .PHONY : MyLib/fast
 
 #=============================================================================
-# Target rules for targets named BoseHubbardCondensateFraction
-
-# Build rule for target.
-BoseHubbardCondensateFraction: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 BoseHubbardCondensateFraction
-.PHONY : BoseHubbardCondensateFraction
-
-# fast build rule for target.
-BoseHubbardCondensateFraction/fast:
-	$(MAKE) -f CMakeFiles/BoseHubbardCondensateFraction.dir/build.make CMakeFiles/BoseHubbardCondensateFraction.dir/build
-.PHONY : BoseHubbardCondensateFraction/fast
-
-#=============================================================================
 # Target rules for targets named BoseHubbard
 
 # Build rule for target.
@@ -148,6 +135,19 @@ BoseHubbard: cmake_check_build_system
 BoseHubbard/fast:
 	$(MAKE) -f CMakeFiles/BoseHubbard.dir/build.make CMakeFiles/BoseHubbard.dir/build
 .PHONY : BoseHubbard/fast
+
+#=============================================================================
+# Target rules for targets named BoseHubbardCondensateFraction
+
+# Build rule for target.
+BoseHubbardCondensateFraction: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 BoseHubbardCondensateFraction
+.PHONY : BoseHubbardCondensateFraction
+
+# fast build rule for target.
+BoseHubbardCondensateFraction/fast:
+	$(MAKE) -f CMakeFiles/BoseHubbardCondensateFraction.dir/build.make CMakeFiles/BoseHubbardCondensateFraction.dir/build
+.PHONY : BoseHubbardCondensateFraction/fast
 
 main/BoseHubbard.o: main/BoseHubbard.cpp.o
 
@@ -239,8 +239,8 @@ help:
 	@echo "... edit_cache"
 	@echo "... MyLib"
 	@echo "... rebuild_cache"
-	@echo "... BoseHubbardCondensateFraction"
 	@echo "... BoseHubbard"
+	@echo "... BoseHubbardCondensateFraction"
 	@echo "... main/BoseHubbard.o"
 	@echo "... main/BoseHubbard.i"
 	@echo "... main/BoseHubbard.s"

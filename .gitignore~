@@ -1,1 +1,7 @@
+build
 CMakeLists.txt
+CMakeCache.txt
+CMakeFiles
+do_stuff.sh
+do_stuff.sh~
+.do_stuff.sh.un~

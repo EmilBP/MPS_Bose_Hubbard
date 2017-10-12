@@ -1,5 +1,0 @@
-/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles/edit_cache.dir
-/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles/MyLib.dir
-/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles/rebuild_cache.dir
-/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles/BoseHubbardCondensateFraction.dir
-/home/frederik/Dropbox/Speciale/Bose Hubbard ITensor/CMakeFiles/BoseHubbard.dir
