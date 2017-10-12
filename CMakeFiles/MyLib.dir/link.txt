@@ -1,0 +1,2 @@
+/usr/bin/ar qc libMyLib.a  CMakeFiles/MyLib.dir/src/correlations.cpp.o
+/usr/bin/ranlib libMyLib.a

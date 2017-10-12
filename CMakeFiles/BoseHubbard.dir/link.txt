@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11 -I/home/frederik/intel/mkl/include   CMakeFiles/BoseHubbard.dir/main/BoseHubbard.cpp.o  -o BoseHubbard -rdynamic libMyLib.a /home/frederik/ITensor/lib/libitensor-g.a -L/home/frederik/intel/mkl/lib/intel64_lin -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -L/home/frederik/ITensor/lib -litensor -liomp5 -lpthread 
