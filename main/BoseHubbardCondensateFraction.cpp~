@@ -13,9 +13,9 @@ int main(){
   //
   // Set sweep settinngs
   //
-  auto sweeps = Sweeps(5); // set to min 3.
-  sweeps.maxm() = 10,20,30,50,50,100,200;
-  sweeps.cutoff() = 1E-9;
+  auto sweeps = Sweeps(3);
+  sweeps.maxm() = 10,20,30,100,200;
+  sweeps.cutoff() = 1E-7;
   sweeps.niter() = 2;
   sweeps.noise() = 1E-7,1E-8,0.0;
   println(sweeps);
@@ -23,15 +23,15 @@ int main(){
   //
   // Set values for U
   //
-  int Nsteps = 100; //set to 100.
-  double Umin = 0, Umax = 7, step = Umax/Nsteps;
+  int Nsteps = 100;
+  double Umin = 0, Umax = 50, step = Umax/Nsteps;
   vector<double> array;
   while(Umin <= Umax) {
       array.push_back(Umin);
       Umin += step;
   }
 
-  double output[Nsteps][Nmax-2];
+  double output[Nsteps+1][Nmax-2];
 
   for (int N = 4; N <= Nmax; N++) {
     int Npart = N;
@@ -56,7 +56,7 @@ int main(){
     auto psi = IQMPS(state);
 
 
-    for (size_t Ui = 0; Ui < Nsteps; ++Ui) {
+    for (size_t Ui = 0; Ui < Nsteps+1; Ui++) {
 
       double J = -1.0;
       double U = array.at(Ui);
@@ -90,7 +90,7 @@ int main(){
   std::fstream myfile;
   myfile.open("condensateData.txt",std::fstream::out);
 
-  for (size_t i = 0; i < Nsteps; i++) {
+  for (size_t i = 0; i < Nsteps+1; i++) {
     for (size_t j = 0; j < Nmax-2; j++) {
       myfile << output[i][j] << "\t";
     }
