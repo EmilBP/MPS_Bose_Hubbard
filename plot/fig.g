@@ -7,7 +7,7 @@ plot '../condensateData.txt' u 1:2 w l title '4 particles', \
      '../condensateData.txt' u 1:7 w l title '9 particles', \
      '../condensateData.txt' u 1:8 w l title '10 particles'
 
-
+set key left bottom	
 set xlabel 'U/J'
 set ylabel 'rho'
 set terminal epslatex size 12cm, 7cm color colortext standalone
