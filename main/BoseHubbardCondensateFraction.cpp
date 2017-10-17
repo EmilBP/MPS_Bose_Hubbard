@@ -9,12 +9,14 @@ using std::vector;
 
 int main(){
 
-  int Nmax = 10;
+  vector<int> NArray = {10,20,30,50,75,100};
+  int Nnumber = NArray.size();
+
   //
   // Set sweep settinngs
   //
-  auto sweeps = Sweeps(5); // set to min 3.
-  sweeps.maxm() = 10,20,30,50,50,100,200;
+  auto sweeps = Sweeps(3); // set to min 3.
+  sweeps.maxm() = 10,20,50,50,50,100,200;
   sweeps.cutoff() = 1E-9;
   sweeps.niter() = 2;
   sweeps.noise() = 1E-7,1E-8,0.0;
@@ -31,9 +33,10 @@ int main(){
       Umin += step;
   }
 
-  double output[Nsteps][Nmax-2];
+  double output[Nsteps][Nnumber+1];
 
-  for (int N = 4; N <= Nmax; N++) {
+  for (int j = 0; j < Nnumber; j++) {
+    int N = NArray.at(j);
     int Npart = N;
     auto sites = Boson(N);
     //
@@ -82,7 +85,7 @@ int main(){
       auto energy = dmrg(psi,H,sweeps,"Quiet");
       auto lambda1 = correlations::correlationTerm(sites,psi,"Adag","A");
       double fc = lambda1/Npart;
-      output[Ui][N-3] = fc;
+      output[Ui][j+1] = fc;
       output[Ui][0] = U;
     }
   }
@@ -91,7 +94,7 @@ int main(){
   myfile.open("condensateData.txt",std::fstream::out);
 
   for (size_t i = 0; i < Nsteps; i++) {
-    for (size_t j = 0; j < Nmax-2; j++) {
+    for (size_t j = 0; j < Nnumber+1; j++) {
       myfile << output[i][j] << "\t";
     }
     myfile << "\n";
