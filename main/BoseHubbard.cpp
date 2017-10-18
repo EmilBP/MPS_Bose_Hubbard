@@ -8,14 +8,15 @@ int main()
     {
     int N = 50;
     int Npart = 50;
+    int HilbertDim = 20;
 
-    auto sites = Boson(N);
+    auto sites = Boson(N,HilbertDim);
 
     //
     // Create the Hamiltonian using AutoMPO
     //
     double J = -1.0;
-    double U = 3.3;
+    double U = 0;
     double eps = 0;
 
     auto ampo = AutoMPO(sites);
@@ -57,11 +58,11 @@ int main()
     // Here less than 5 cutoff values are provided, for example,
     // so all remaining sweeps will use the last one given (= 1E-10).
 
-    auto sweeps = Sweeps(5);
-    sweeps.maxm() = 10,20,50,50,100,200;
-    sweeps.cutoff() = 1E-9;
+    auto sweeps = Sweeps(10);
+    sweeps.maxm() = 20,30,50,100,100,200;
+    sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
-    sweeps.noise() = 1E-7,1E-8,0.0;
+    sweeps.noise() = 1E-6,1E-7,1E-8,1E-9,0;
     println(sweeps);
 
     //

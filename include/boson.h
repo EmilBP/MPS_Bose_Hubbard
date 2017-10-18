@@ -6,128 +6,124 @@ namespace itensor {
 
 class BosonSite;
 
-using Boson = BasicSiteSet<BosonSite>;
-
-class BosonSite
+template<typename SiteType>
+class BosonSiteSet : public SiteSet
     {
-    IQIndex s;
     public:
 
-    BosonSite() { }
+    BosonSiteSet() { }
 
-    BosonSite(IQIndex I) : s(I) { }
-
-    BosonSite(int n, Args const& args = Args::global()){
-      s = IQIndex{
-        nameint("Boson ",n),
-        Index(nameint("Emp ",n),1,Site),QN("Nb=",0),
-        Index(nameint("Occ1 ",n),1,Site),QN("Nb=",1),
-        Index(nameint("Occ2 ",n),1,Site),QN("Nb=",2),
-        Index(nameint("Occ3 ",n),1,Site),QN("Nb=",3),
-        Index(nameint("Occ4 ",n),1,Site),QN("Nb=",4),
-        Index(nameint("Occ5 ",n),1,Site),QN("Nb=",5),
-        Index(nameint("Occ6 ",n),1,Site),QN("Nb=",6),
-        Index(nameint("Occ7 ",n),1,Site),QN("Nb=",7),
-      };
-    }
-
-    IQIndex
-    index() const { return s; }
-
-    IQIndexVal
-    state(std::string const& state)
+    BosonSiteSet(int N, int d)
         {
-        if(state == "0" || state == "Emp") {return s(1);}
-        else
-        if(state == "1" || state == "Occ1") {return s(2);}
-        else
-        if(state == "2" || state == "Occ2") {return s(3);}
-        else
-        if(state == "3" || state == "Occ3") {return s(4);}
-        else
-        if(state == "4" || state == "Occ4") {return s(5);}
-        else
-        if(state == "5" || state == "Occ5") {return s(6);}
-        else
-        if(state == "6" || state == "Occ6") {return s(7);}
-        else
-        if(state == "7" || state == "Occ7") {return s(8);}
-        else
+        auto sites = SiteStore(N);
+        for(int j = 1; j <= N; ++j)
             {
-            Error("State " + state + " not recognized");
+            sites.set(j,SiteType(j,d));
             }
-        return IQIndexVal{};
+        SiteSet::init(std::move(sites));
         }
 
-	IQTensor
-	op(std::string const& opname,
+    BosonSiteSet(std::vector<IQIndex> const& inds)
+        {
+        int N = inds.size();
+        auto sites = SiteStore(N);
+        for(int j = 1, i = 0; j <= N; ++j, ++i)
+            {
+            auto& Ii = inds.at(i);
+            sites.set(j,SiteType(Ii));
+            }
+        SiteSet::init(std::move(sites));
+        }
+
+    void
+    read(std::istream& s)
+        {
+        SiteSet::readType<SiteType>(s);
+        }
+
+  };
+
+using Boson = BosonSiteSet<BosonSite>;
+
+class BosonSite {
+  IQIndex s;
+  int d;
+  std::vector<std::string> stateNames;
+
+  public:
+
+  BosonSite() { }
+
+  BosonSite(IQIndex I) : s(I) { }
+
+  BosonSite(int n, int d)
+   : d(d) {
+      char space[1] = { ' ' };
+      auto v = stdx::reserve_vector<IndexQN>(1+d);
+      v.emplace_back(Index(nameint("Emp ",n),1,Site),QN("Nb=",0));
+      stateNames.emplace_back("Emp");
+
+      for (size_t i = 1; i <= d; i++) {
+        auto name = nameint("Occ",i);
+        stateNames.emplace_back(name);
+        name += space;
+        v.emplace_back(Index(nameint(name,n),1,Site),QN("Nb=",i));
+      }
+
+      s = IQIndex(nameint("Boson ",n), std::move(v) );
+    }
+
+  IQIndex index() const { return s; }
+
+  IQIndexVal state(std::string const& state) {
+      for (size_t j = 0; j < stateNames.size(); j++) {
+        if (state == stateNames.at(j) || state == nameint("",j)) {return s(j+1);}
+      }
+
+      Error("State " + state + " not recognized");
+      return IQIndexVal{};
+    }
+
+	IQTensor op(std::string const& opname,
 	   Args const& args) const
         {
         auto sP = prime(s);
 
-        IQIndexVal Emp(s(1)),
-                   EmpP(sP(1)),
-                   Occ1(s(2)),
-                   Occ1P(sP(2)),
-                   Occ2(s(3)),
-                   Occ2P(sP(3)),
-                   Occ3(s(4)),
-                   Occ3P(sP(4)),
-                   Occ4(s(5)),
-                   Occ4P(sP(5)),
-                   Occ5(s(6)),
-                   Occ5P(sP(6)),
-                   Occ6(s(7)),
-                   Occ6P(sP(7)),
-                   Occ7(s(8)),
-                   Occ7P(sP(8));
+        std::vector<IQIndexVal> indices(d+1);
+        std::vector<IQIndexVal> indicesP(d+1);
+        for (size_t j = 0; j <= d; j++) {
+          indices.at(j) = s(j+1);
+          indicesP.at(j) = sP(j+1);
+        }
 
         IQTensor Op(dag(s),sP);
 
         if(opname == "N")
             {
-            Op.set(Emp,EmpP,0);
-            Op.set(Occ1,Occ1P,1);
-            Op.set(Occ2,Occ2P,2);
-            Op.set(Occ3,Occ3P,3);
-            Op.set(Occ4,Occ4P,4);
-            Op.set(Occ5,Occ5P,5);
-            Op.set(Occ6,Occ6P,6);
-            Op.set(Occ7,Occ7P,7);
+              for (size_t j = 0; j <= d; j++) {
+                  Op.set(indices.at(j),indicesP.at(j),j);
+              }
             }
         else
         if(opname == "N-1")
             {
-            Op.set(Emp,EmpP,0);
-            Op.set(Occ1,Occ1P,0);
-            Op.set(Occ2,Occ2P,1);
-            Op.set(Occ3,Occ3P,2);
-            Op.set(Occ4,Occ4P,3);
-            Op.set(Occ5,Occ5P,4);
-            Op.set(Occ6,Occ6P,5);
-            Op.set(Occ7,Occ7P,6);
+              for (size_t j = 1; j <= d; j++) {
+                  Op.set(indices.at(j),indicesP.at(j),j-1);
+              }
             }
         else
         if(opname == "A")
             {
-            Op.set(Occ1,EmpP,1);
-            Op.set(Occ2,Occ1P,std::sqrt(2));
-            Op.set(Occ3,Occ2P,std::sqrt(3));
-            Op.set(Occ4,Occ3P,std::sqrt(4));
-            Op.set(Occ5,Occ4P,std::sqrt(5));
-            Op.set(Occ6,Occ5P,std::sqrt(6));
-            Op.set(Occ7,Occ6P,std::sqrt(7));
+              for (size_t j = 1; j <= d; j++) {
+                  Op.set(indices.at(j),indicesP.at(j-1),std::sqrt(j));
+              }
             }
         else
         if(opname == "Adag")
             {
-            Op.set(Emp,Occ1P,1);
-            Op.set(Occ1,Occ2P,std::sqrt(2));
-            Op.set(Occ2,Occ3P,std::sqrt(3));
-            Op.set(Occ3,Occ4P,std::sqrt(4));
-            Op.set(Occ4,Occ5P,std::sqrt(5));
-            Op.set(Occ5,Occ6P,std::sqrt(6));
-            Op.set(Occ6,Occ7P,std::sqrt(7));
+              for (size_t j = 1; j <= d; j++) {
+                  Op.set(indices.at(j-1),indicesP.at(j),std::sqrt(j));
+              }
             }
         else
             {

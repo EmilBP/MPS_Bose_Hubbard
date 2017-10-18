@@ -31,16 +31,16 @@ Cplx correlations::correlationFunction(SiteSet& sites, IQMPS& psi, std::string c
   //index linking i to i+1:
   auto ir = commonIndex(psi.A(i),psi.A(i+1),Link);
 
-  auto C = psi.A(i)*op_i*dag(prime(psi.A(i),Site,ir));
+  auto C = psi.A(i)*op_i*prime(dag(psi.A(i)),Site,ir);
   for(int k = i+1; k < j; ++k){
     C *= psi.A(k);
-    C *= dag(prime(psi.A(k),Link));
+    C *= prime(dag(psi.A(k)),Link);
   }
   C *= psi.A(j);
   C *= op_j;
   //index linking j to j-1:
   auto jl = commonIndex(psi.A(j),psi.A(j-1),Link);
-  C *= dag(prime(psi.A(j),jl,Site));
+  C *= prime(dag(psi.A(j)),jl,Site);
 
   return C.cplx(); //or C.cplx() if expecting complex
 }
@@ -62,6 +62,15 @@ Real correlations::correlationTerm(SiteSet sites, IQMPS psi, std::string const& 
     }
   }
 
+
+  // for (size_t i = 1; i <= N; i++) {
+  //   for (size_t j = 1; j <= N; j++) {
+  //     std::cout << rho.cplx(rho_i(i),rho_j(j)) << "\t" ;
+  //   }
+  //   printf("\n");
+  // }
+  // printf("\n");
+
   ITensor V, D;
   diagHermitian(rho,V,D, {"Maxm",1});
 
@@ -71,5 +80,3 @@ Real correlations::correlationTerm(SiteSet sites, IQMPS psi, std::string const& 
 
   return D.real(index1(1),index2(1));
 }
-
-

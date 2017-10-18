@@ -2,6 +2,7 @@
 #define CORRELATIONS_H
 
 #include "itensor/all.h"
+#include <iostream>
 
 using namespace itensor;
 
