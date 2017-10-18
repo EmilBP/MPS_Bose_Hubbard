@@ -15,26 +15,6 @@
     auto sites = Boson(N);
 
     //
-    // Create Super-Fluid (SF) Hamiltonian using AutoMPO
-    //
-    double J = -1.0;
-    double U = 0;//1e-2;
-    double eps = 0;
-
-    auto ampo = AutoMPO(sites);
-    for(int i = 1; i < N; ++i) {
-      ampo += J,"A",i,"Adag",i+1;
-      ampo += J,"Adag",i,"A",i+1;
-    }
-    for (int i = 1; i <= N; ++i) {
-      ampo += U/2.0,"N",i,"N-1",i;
-      ampo += eps,"N",i;
-    }
-
-    auto H_SF = IQMPO(ampo);
-
-
-    //
     // Set the initial wavefunction matrix product state
     //
     auto state = InitState(sites);
@@ -53,11 +33,31 @@
 
     auto psi = IQMPS(state);
 
+    //
+    // Create Super-Fluid (SF) Hamiltonian using AutoMPO
+    //
+    double J = -1.0;
+    double U = 0;//1e-2;
+    double eps = 0;
+
+    auto ampo = AutoMPO(sites);
+    auto ampo2 = ampo;
+    for(int i = 1; i < N; ++i) {
+      ampo += J,"A",i,"Adag",i+1;
+      ampo += J,"Adag",i,"A",i+1;
+    }
+    for (int i = 1; i <= N; ++i) {
+      ampo += U/2.0,"N",i,"N-1",i;
+      ampo += eps,"N",i;
+    }
+
+    auto H_SF = IQMPO(ampo);
+
 
     //
     // Set the parameters controlling the accuracy of the DMRG
     //
-    auto sweeps = Sweeps(5);
+    auto sweeps = Sweeps(10);
     sweeps.maxm() = 10,20,50,50,100,200;
     sweeps.cutoff() = 1E-9;
     sweeps.niter() = 2;
@@ -68,72 +68,55 @@
     // Begin the DMRG calculation
     //
     auto energy = dmrg(psi,H_SF,sweeps,"Quiet");
-
-    for(int i = 1; i <= N; ++i) {
-	auto ampo_temp = AutoMPO(sites);
-	ampo_temp += 1,"N",i;
-	auto op_temp = IQMPO(ampo_temp);
-	println(overlap(psi,op_temp,psi));
-	println(i);
-    	}
+    printf("%f\n",energy);
+    printf("%f\n",overlap(psi,H_SF,psi));
     //
     // Save condensate fraction
     //
     vector<double> condensateFraction;
-
-    auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
-    double fc = rho/Npart;
-    condensateFraction.push_back(fc);
+    //
+    // auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
+    // double fc = rho/Npart;
+    condensateFraction.push_back(energy);
 
 
     //
     // Setup time evolution with Mott-Insulator (MI) Hamiltonian
     //
-//    J = 0;
-    U = 10;
+    J = 0;
+    U = 1;
 
-    auto ampo2 = AutoMPO(sites);
-//    for(int i = 1; i < N; ++i) {
-//      ampo2 += J,"A",i,"Adag",i+1;
-//      ampo2 += J,"Adag",i,"A",i+1;
-//    }
+    //auto sites2 = Boson(N);
+
+    for(int i = 1; i < N; ++i) {
+      ampo2 += J,"A",i,"Adag",i+1;
+      ampo2 += J,"Adag",i,"A",i+1;
+    }
     for (int i = 1; i <= N; ++i) {
       ampo2 += U/2.0,"N",i,"N-1",i;
-      ampo2 += eps,"N",i;
     }
 
     auto H_MI = IQMPO(ampo2);
-    auto tau = 1e-3;
+    auto tau = 1e-4;
     auto expH = toExpH<IQTensor>(ampo2,tau*Cplx_i);
 
-
+    printf("%f\n", overlap(psi,H_MI,psi));
     //
     // Perform time evolution
     //
     vector<double> tvec = {0};
-    auto args = Args("Cutoff=",1E-9,"Maxm=",200);
-    auto ttotal = 30.0;
-    auto nt = int(ttotal/tau+(1e-9*(ttotal/tau)));
+    auto args = Args("Cutoff=",1E-9,"Maxm=",50);
+    auto ttotal = 0.01;
+    auto nt = int(ttotal/tau);
 
-//    psi = exactApplyMPO(expH,psi,args);
-//    normalize(psi);
-//    for(int i = 1; i <= N; ++i) {
-//	auto ampo_temp = AutoMPO(sites);
-//	ampo_temp += 1,"N",i;
-//	auto op_temp = IQMPO(ampo_temp);
-//	println(overlap(psi,op_temp,psi));
-//	println(i);
-//    	}
 
     for(int n = 1; n <= nt; ++n){
-        psi = exactApplyMPO(expH,psi,args);	
-	normalize(psi);
-        if ( n%5 == 0) {
-          rho = correlations::correlationTerm(sites,psi,"Adag","A");
-          fc = rho/Npart;
-          condensateFraction.push_back(fc);
-          tvec.push_back(n*tau);
-        }
+        psi = exactApplyMPO(expH,psi,args);
+        normalize(psi);
+        tvec.push_back(n*tau);
+        auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
+        auto fc = rho/Npart;
+        condensateFraction.push_back(fc);
     }
 
     std::fstream myfile;

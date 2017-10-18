@@ -9,7 +9,7 @@ using std::vector;
 
 int main(){
 
-  vector<int> NArray = {10,20,30,50,75,100};
+  vector<int> NArray = {10,20,30,40,50};
   int Nnumber = NArray.size();
 
   //
@@ -25,7 +25,7 @@ int main(){
   //
   // Set values for U
   //
-  int Nsteps = 100; //set to 100.
+  int Nsteps = 50; //set to 100.
   double Umin = 0, Umax = 7, step = Umax/Nsteps;
   vector<double> array;
   while(Umin <= Umax) {
