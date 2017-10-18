@@ -9,8 +9,8 @@
 
   int main()
     {
-    int N = 50;
-    int Npart = 50;
+    int N = 5;
+    int Npart = 5;
 
     auto sites = Boson(N);
 
@@ -18,7 +18,7 @@
     // Create Super-Fluid (SF) Hamiltonian using AutoMPO
     //
     double J = -1.0;
-    double U = 1e-2;
+    double U = 0;//1e-2;
     double eps = 0;
 
     auto ampo = AutoMPO(sites);
@@ -69,6 +69,13 @@
     //
     auto energy = dmrg(psi,H_SF,sweeps,"Quiet");
 
+    for(int i = 1; i <= N; ++i) {
+	auto ampo_temp = AutoMPO(sites);
+	ampo_temp += 1,"N",i;
+	auto op_temp = IQMPO(ampo_temp);
+	println(overlap(psi,op_temp,psi));
+	println(i);
+    	}
     //
     // Save condensate fraction
     //
@@ -82,22 +89,22 @@
     //
     // Setup time evolution with Mott-Insulator (MI) Hamiltonian
     //
-    J = -1e-4;
-    U = 1;
+//    J = 0;
+    U = 10;
 
     auto ampo2 = AutoMPO(sites);
-    for(int i = 1; i < N; ++i) {
-      ampo2 += J,"A",i,"Adag",i+1;
-      ampo2 += J,"Adag",i,"A",i+1;
-    }
+//    for(int i = 1; i < N; ++i) {
+//      ampo2 += J,"A",i,"Adag",i+1;
+//      ampo2 += J,"Adag",i,"A",i+1;
+//    }
     for (int i = 1; i <= N; ++i) {
       ampo2 += U/2.0,"N",i,"N-1",i;
       ampo2 += eps,"N",i;
     }
 
     auto H_MI = IQMPO(ampo2);
-    auto tau = 1e-1;
-    auto expH = toExpH<ITensor>(ampo2,tau*Cplx_i);
+    auto tau = 1e-3;
+    auto expH = toExpH<IQTensor>(ampo2,tau*Cplx_i);
 
 
     //
@@ -105,12 +112,23 @@
     //
     vector<double> tvec = {0};
     auto args = Args("Cutoff=",1E-9,"Maxm=",200);
-    auto ttotal = 8.0;
+    auto ttotal = 30.0;
     auto nt = int(ttotal/tau+(1e-9*(ttotal/tau)));
 
+//    psi = exactApplyMPO(expH,psi,args);
+//    normalize(psi);
+//    for(int i = 1; i <= N; ++i) {
+//	auto ampo_temp = AutoMPO(sites);
+//	ampo_temp += 1,"N",i;
+//	auto op_temp = IQMPO(ampo_temp);
+//	println(overlap(psi,op_temp,psi));
+//	println(i);
+//    	}
+
     for(int n = 1; n <= nt; ++n){
-        psi = exactApplyMPO(expH,psi,args);
-        if ( (n*tau)%0.2 == 0) {
+        psi = exactApplyMPO(expH,psi,args);	
+	normalize(psi);
+        if ( n%5 == 0) {
           rho = correlations::correlationTerm(sites,psi,"Adag","A");
           fc = rho/Npart;
           condensateFraction.push_back(fc);

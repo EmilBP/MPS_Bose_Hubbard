@@ -7,7 +7,7 @@ using namespace itensor;
 
 class correlations{
 public:
-  static Real correlationFunction(SiteSet& sites, IQMPS& psi, std::string const& opname1, int i, std::string const& opname2, int j);
+  static Cplx correlationFunction(SiteSet& sites, IQMPS& psi, std::string const& opname1, int i, std::string const& opname2, int j);
   static Real correlationTerm(SiteSet sites, IQMPS psi, std::string const& opname1, std::string const& opname2);
 };
 
