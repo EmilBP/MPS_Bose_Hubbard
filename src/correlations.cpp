@@ -63,13 +63,13 @@ Real correlations::correlationTerm(SiteSet sites, IQMPS psi, std::string const& 
   }
 
 
-  for (size_t i = 1; i <= N; i++) {
-    for (size_t j = 1; j <= N; j++) {
-      std::cout << rho.cplx(rho_i(i),rho_j(j)) << "\t" ;
-    }
-    printf("\n");
-  }
-  printf("\n");
+  // for (size_t i = 1; i <= N; i++) {
+  //   for (size_t j = 1; j <= N; j++) {
+  //     std::cout << rho.cplx(rho_i(i),rho_j(j)) << "\t" ;
+  //   }
+  //   printf("\n");
+  // }
+  // printf("\n");
 
   ITensor V, D;
   diagHermitian(rho,V,D, {"Maxm",1});

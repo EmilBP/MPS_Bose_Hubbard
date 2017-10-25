@@ -11,8 +11,9 @@
     {
     int N = 5;
     int Npart = 5;
+    int HilbertDim = 5;
 
-    auto sites = Boson(N);
+    auto sites = Boson(N,HilbertDim);
 
     //
     // Set the initial wavefunction matrix product state

@@ -9,14 +9,15 @@ using std::vector;
 
 int main(){
 
-  vector<int> NArray = {10,20,30,40,50};
+  // vector<int> NArray = {10,20,30,40,50};
+  vector<int> NArray = {50};
   int Nnumber = NArray.size();
 
   //
   // Set sweep settinngs
   //
-  auto sweeps = Sweeps(3); // set to min 3.
-  sweeps.maxm() = 10,20,50,50,50,100,200;
+  auto sweeps = Sweeps(5); // set to min 3.
+  sweeps.maxm() = 10,20,50,100,100,100,200;
   sweeps.cutoff() = 1E-9;
   sweeps.niter() = 2;
   sweeps.noise() = 1E-7,1E-8,0.0;
@@ -25,8 +26,8 @@ int main(){
   //
   // Set values for U
   //
-  int Nsteps = 50; //set to 100.
-  double Umin = 0, Umax = 7, step = Umax/Nsteps;
+  int Nsteps = 20; //set to 100.
+  double Umin = 0, Umax = 0.1, step = Umax/Nsteps;
   vector<double> array;
   while(Umin <= Umax) {
       array.push_back(Umin);
@@ -38,7 +39,8 @@ int main(){
   for (int j = 0; j < Nnumber; j++) {
     int N = NArray.at(j);
     int Npart = N;
-    auto sites = Boson(N);
+    int HilbertDim = 10;
+    auto sites = Boson(N,HilbertDim);
     //
     // Set the initial wavefunction matrix product state
     //
@@ -91,7 +93,7 @@ int main(){
   }
 
   std::fstream myfile;
-  myfile.open("condensateData.txt",std::fstream::out);
+  myfile.open("condensateData2.txt",std::fstream::out);
 
   for (size_t i = 0; i < Nsteps; i++) {
     for (size_t j = 0; j < Nnumber+1; j++) {
