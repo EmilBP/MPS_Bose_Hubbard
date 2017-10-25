@@ -9,12 +9,8 @@ using std::vector;
 
 int main(){
 
-<<<<<<< HEAD
   // vector<int> NArray = {10,20,30,40,50};
   vector<int> NArray = {50};
-=======
-  vector<int> NArray = {10,20,30,40,50};
->>>>>>> e2d14a2a2832b7f694b2d29e437a9b3184742321
   int Nnumber = NArray.size();
 
   //
@@ -30,13 +26,8 @@ int main(){
   //
   // Set values for U
   //
-<<<<<<< HEAD
   int Nsteps = 20; //set to 100.
   double Umin = 0, Umax = 0.1, step = Umax/Nsteps;
-=======
-  int Nsteps = 50; //set to 100.
-  double Umin = 0, Umax = 7, step = Umax/Nsteps;
->>>>>>> e2d14a2a2832b7f694b2d29e437a9b3184742321
   vector<double> array;
   while(Umin <= Umax) {
       array.push_back(Umin);
