@@ -16,7 +16,7 @@ int main(){
   //
   // Set sweep settinngs
   //
-  auto sweeps = Sweeps(6); // set to min 3.
+  auto sweeps = Sweeps(5); // set to min 3.
   sweeps.maxm() = 10,20,50,100,100,200,200;
   sweeps.cutoff() = 1E-9;
   sweeps.niter() = 2;
@@ -26,7 +26,7 @@ int main(){
   //
   // Set values for U
   //
-  int Nsteps = 7; //set to 100.
+  int Nsteps = 5; //set to 100.
   double Umin = 0.1, Umax = 15, step = Umax/Nsteps;
   vector<double> array;
   while(Umin <= Umax) {
