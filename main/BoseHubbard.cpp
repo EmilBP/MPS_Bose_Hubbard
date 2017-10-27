@@ -6,9 +6,9 @@ using namespace itensor;
 
 int main()
     {
-    int N = 50;
-    int Npart = 50;
-    int HilbertDim = 20;
+    int N = 5;
+    int Npart = 5;
+    int HilbertDim = 5;
 
     auto sites = Boson(N,HilbertDim);
 
@@ -58,7 +58,7 @@ int main()
     // Here less than 5 cutoff values are provided, for example,
     // so all remaining sweeps will use the last one given (= 1E-10).
 
-    auto sweeps = Sweeps(10);
+    auto sweeps = Sweeps(5);
     sweeps.maxm() = 20,30,50,100,100,200;
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
@@ -79,6 +79,16 @@ int main()
     auto test = correlations::correlationTerm(sites,psi,"Adag","A");
     double fc = test/Npart;
     printfln("\nCorrelation = %.10f",fc);
+
+    auto rhoMat = correlations::correlationMatrix(sites,psi,"Adag","A");
+    auto index = rhoMat.inds();
+
+    for (size_t i = 1; i <= N; i++) {
+      for (size_t j = 1; j <= N; j++) {
+        printf("%f\t",rhoMat.real((index.index(1))(i),(index.index(2))(j)));
+      }
+      printf("\n");
+    }
 
     return 0;
     }

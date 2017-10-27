@@ -1,7 +1,7 @@
 #include "correlations.h"
 #include <iostream>
 
-Cplx correlations::correlationFunction(SiteSet& sites, IQMPS& psi, std::string const& opname1, int i, std::string const& opname2, int j){
+Cplx correlations::correlationFunction(SiteSet const& sites, IQMPS& psi, std::string const& opname1, int i, std::string const& opname2, int j){
   auto op_i = sites.op(opname1,i);
   auto op_j = sites.op(opname2,j);
 
@@ -45,10 +45,10 @@ Cplx correlations::correlationFunction(SiteSet& sites, IQMPS& psi, std::string c
   return C.cplx(); //or C.cplx() if expecting complex
 }
 
-Real correlations::correlationTerm(SiteSet sites, IQMPS psi, std::string const& opname1, std::string const& opname2){
+ITensor correlations::correlationMatrix(SiteSet const& sites, IQMPS& psi, std::string const& opname1, std::string const& opname2){
   int N = sites.N();
   Index rho_i("rho i",N),
-  rho_j = prime(rho_i);
+        rho_j = prime(rho_i);
 
   ITensor rho(rho_i,rho_j);
   Cplx Cij;
@@ -61,15 +61,11 @@ Real correlations::correlationTerm(SiteSet sites, IQMPS psi, std::string const& 
       rho.set(rho_i(j),rho_j(i), conj(Cij));
     }
   }
+  return rho;
+}
 
-
-  // for (size_t i = 1; i <= N; i++) {
-  //   for (size_t j = 1; j <= N; j++) {
-  //     std::cout << rho.cplx(rho_i(i),rho_j(j)) << "\t" ;
-  //   }
-  //   printf("\n");
-  // }
-  // printf("\n");
+Real correlations::correlationTerm(SiteSet const& sites, IQMPS & psi, std::string const& opname1, std::string const& opname2){
+  auto rho = correlationMatrix(sites,psi,opname1,opname2);
 
   ITensor V, D;
   diagHermitian(rho,V,D, {"Maxm",1});

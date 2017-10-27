@@ -16,8 +16,8 @@ int main(){
   //
   // Set sweep settinngs
   //
-  auto sweeps = Sweeps(5); // set to min 3.
-  sweeps.maxm() = 10,20,50,100,100,100,200;
+  auto sweeps = Sweeps(6); // set to min 3.
+  sweeps.maxm() = 10,20,50,100,100,200,200;
   sweeps.cutoff() = 1E-9;
   sweeps.niter() = 2;
   sweeps.noise() = 1E-7,1E-8,0.0;
@@ -26,8 +26,8 @@ int main(){
   //
   // Set values for U
   //
-  int Nsteps = 20; //set to 100.
-  double Umin = 0, Umax = 0.1, step = Umax/Nsteps;
+  int Nsteps = 7; //set to 100.
+  double Umin = 0.1, Umax = 15, step = Umax/Nsteps;
   vector<double> array;
   while(Umin <= Umax) {
       array.push_back(Umin);
@@ -35,6 +35,7 @@ int main(){
   }
 
   double output[Nsteps][Nnumber+1];
+  vector<ITensor> correlationMatrices;
 
   for (int j = 0; j < Nnumber; j++) {
     int N = NArray.at(j);
@@ -59,7 +60,6 @@ int main(){
         }
 
     auto psi = IQMPS(state);
-
 
     for (size_t Ui = 0; Ui < Nsteps; ++Ui) {
 
@@ -86,6 +86,7 @@ int main(){
       //
       auto energy = dmrg(psi,H,sweeps,"Quiet");
       auto lambda1 = correlations::correlationTerm(sites,psi,"Adag","A");
+      correlationMatrices.emplace_back(correlations::correlationMatrix(sites,psi,"Adag","A"));
       double fc = lambda1/Npart;
       output[Ui][j+1] = fc;
       output[Ui][0] = U;
@@ -102,6 +103,27 @@ int main(){
     myfile << "\n";
   }
   myfile.close();
+
+  std::fstream myfile2;
+  for (size_t i = 0; i < Nsteps; i++) {
+    auto M = correlationMatrices.at(i);
+    char* name;
+    sprintf(name,"correlationMatrix_U%.2f.txt",array.at(i));
+    myfile2.open(name,std::fstream::out);
+    auto index = M.inds();
+    auto length = (index.index(1)).m();
+
+    for (size_t i = 1; i <= length; i++) {
+      for (size_t j = 1; j <= length; j++) {
+        auto val = M.cplx((index.index(1))(i),(index.index(2))(j));
+        val = std::sqrt(val*val);
+        myfile2 << val << "\t";
+      }
+      myfile2 << "\n";
+    }
+    myfile2.close();
+  }
+
 
   return 0;
 }
