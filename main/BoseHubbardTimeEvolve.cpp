@@ -48,7 +48,7 @@
       ampo += J,"Adag",i,"A",i+1;
     }
     for (int i = 1; i <= N; ++i) {
-      ampo += U/2.0,"N",i,"N-1",i;
+      ampo += U/2.0,"N(N-1)",i;
       ampo += eps,"N",i;
     }
 

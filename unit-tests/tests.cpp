@@ -115,7 +115,7 @@ struct DISABLED_GroundStateEnergyTest : testing::Test {
       ampo += J,"Adag",i,"A",i+1;
     }
     for (int i = 1; i <= N; ++i) {
-      ampo += U/2.0,"N",i,"N-1",i;
+      ampo += U/2.0,"N(N-1)",i;
       ampo += eps,"N",i;
     }
 
@@ -234,9 +234,8 @@ TEST_F(twoSiteCorrelationTest, testBosonSiteWithOcc1) {
     int site2 = 1;
 
     ASSERT_EQ( (Cplx) 1, correlations::correlationFunction(*sites,*psi,"N",site1,"N",site2));
-    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N",site1,"N-1",site2));
-    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N-1",site1,"N",site2));
-    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N-1",site1,"N-1",site2));
+    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"I",site1,"N(N-1)",site2));
+    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N(N-1)",site1,"I",site2));
 
     ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"Adag",site1,"Adag",site2));
     ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"A",site1,"A",site2));
@@ -252,9 +251,8 @@ TEST_F(twoSiteCorrelationTest, testBosonSiteWithOcc2) {
     int site2 = 2;
 
     ASSERT_EQ( (Cplx) 4.0, correlations::correlationFunction(*sites,*psi,"N",site1,"N",site2));
-    ASSERT_EQ( (Cplx) 2.0, correlations::correlationFunction(*sites,*psi,"N",site1,"N-1",site2));
-    ASSERT_EQ( (Cplx) 2.0, correlations::correlationFunction(*sites,*psi,"N-1",site1,"N",site2));
-    ASSERT_EQ( (Cplx) 1.0, correlations::correlationFunction(*sites,*psi,"N-1",site1,"N-1",site2));
+    ASSERT_EQ( (Cplx) 2.0, correlations::correlationFunction(*sites,*psi,"I",site1,"N(N-1)",site2));
+    ASSERT_EQ( (Cplx) 2.0, correlations::correlationFunction(*sites,*psi,"N(N-1)",site1,"I",site2));
 
     ASSERT_EQ( (Cplx) 0.0, correlations::correlationFunction(*sites,*psi,"Adag",site1,"Adag",site2));
     ASSERT_EQ( (Cplx) 0.0, correlations::correlationFunction(*sites,*psi,"A",site1,"A",site2));
@@ -270,9 +268,8 @@ TEST_F(twoSiteCorrelationTest, testBosonSitesWithOcc1andOcc2) {
     int site2 = 2;
 
     ASSERT_EQ( (Cplx) 2, correlations::correlationFunction(*sites,*psi,"N",site1,"N",site2));
-    ASSERT_EQ( (Cplx) 1, correlations::correlationFunction(*sites,*psi,"N",site1,"N-1",site2));
-    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N-1",site1,"N",site2));
-    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N-1",site1,"N-1",site2));
+    ASSERT_EQ( (Cplx) 2, correlations::correlationFunction(*sites,*psi,"I",site1,"N(N-1)",site2));
+    ASSERT_EQ( (Cplx) 0, correlations::correlationFunction(*sites,*psi,"N(N-1)",site1,"I",site2));
 
     ASSERT_EQ( (Cplx) 0.0, correlations::correlationFunction(*sites,*psi,"Adag",site1,"Adag",site2));
     ASSERT_EQ( (Cplx) 0.0, correlations::correlationFunction(*sites,*psi,"A",site1,"A",site2));

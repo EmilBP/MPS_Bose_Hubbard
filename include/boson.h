@@ -105,13 +105,6 @@ class BosonSite {
               }
             }
         else
-        if(opname == "N-1")
-            {
-              for (size_t j = 1; j <= d; j++) {
-                  Op.set(indices.at(j),indicesP.at(j),j-1);
-              }
-            }
-        else
         if(opname == "A")
             {
               for (size_t j = 1; j <= d; j++) {
