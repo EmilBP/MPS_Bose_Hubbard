@@ -1,3 +1,4 @@
 build
 CMakeLists.txt
 unit-tests/build
+*.backup

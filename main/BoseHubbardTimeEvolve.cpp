@@ -38,7 +38,7 @@
     // Create Super-Fluid (SF) Hamiltonian using AutoMPO
     //
     double J = -1.0;
-    double U = 0;//1e-2;
+    double U = 0;
     double eps = 0;
 
     auto ampo = AutoMPO(sites);
@@ -69,59 +69,61 @@
     // Begin the DMRG calculation
     //
     auto energy = dmrg(psi,H_SF,sweeps,"Quiet");
-    printf("%f\n",energy);
-    printf("%f\n",overlap(psi,H_SF,psi));
+    printf("Energy w.r.t. superfluid Hamiltonian: %f\n",energy);
     //
     // Save condensate fraction
     //
     vector<double> condensateFraction;
-    //
-    // auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
-    // double fc = rho/Npart;
-    condensateFraction.push_back(energy);
+    auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
+    double fc = rho/Npart;
+    condensateFraction.push_back(fc);
 
 
     //
     // Setup time evolution with Mott-Insulator (MI) Hamiltonian
     //
-    J = 0;
-    U = 1;
+    auto tau = 1e-3;
 
-    //auto sites2 = Boson(N);
+    J = 0.03;
+    U = 2;
 
     for(int i = 1; i < N; ++i) {
       ampo2 += J,"A",i,"Adag",i+1;
       ampo2 += J,"Adag",i,"A",i+1;
     }
     for (int i = 1; i <= N; ++i) {
-      ampo2 += U/2.0,"N",i,"N-1",i;
+      ampo2 += U/2.0,"N(N-1)",i;
     }
 
     auto H_MI = IQMPO(ampo2);
-    auto tau = 1e-4;
-    auto expH = toExpH<IQTensor>(ampo2,tau*Cplx_i);
+//    auto expH = toExpH<IQTensor>(ampo2,tau*Cplx_i);
+    auto expiHdt_1 = toExpH<IQTensor>(ampo2,tau*0.5*(1.0+Cplx_i)*Cplx_i);
+    auto expiHdt_2 = toExpH<IQTensor>(ampo2,tau*0.5*(1.0-Cplx_i)*Cplx_i);
 
-    printf("%f\n", overlap(psi,H_MI,psi));
     //
     // Perform time evolution
     //
     vector<double> tvec = {0};
     auto args = Args("Cutoff=",1E-9,"Maxm=",50);
-    auto ttotal = 0.01;
+    auto ttotal = 16;
     auto nt = int(ttotal/tau);
 
 
     for(int n = 1; n <= nt; ++n){
-        psi = exactApplyMPO(expH,psi,args);
-        normalize(psi);
-        tvec.push_back(n*tau);
-        auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
-        auto fc = rho/Npart;
-        condensateFraction.push_back(fc);
+//        psi = exactApplyMPO(expH,psi,args);
+//        normalize(psi);
+      fitApplyMPO(psi,expiHdt_1,psi,args);
+      fitApplyMPO(psi,expiHdt_2,psi,args);
+	if (n % 10) {
+            tvec.push_back(n*tau);
+            auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
+            auto fc = rho/Npart;
+            condensateFraction.push_back(fc);
+	}
     }
 
     std::fstream myfile;
-    myfile.open("TimeEvolutionFractionData.txt",std::fstream::out);
+    myfile.open("TimeEvolutionFractionData5part5sites_U2_J0_03_oneUop_ttotal_16_cplxStep.txt",std::fstream::out);
 
     for (size_t i = 0; i < tvec.size(); i++) {
       myfile << tvec.at(i) << "\t";

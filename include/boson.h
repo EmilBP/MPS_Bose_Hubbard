@@ -126,6 +126,20 @@ class BosonSite {
               }
             }
         else
+	if(opname == "N(N-1)")
+	    {
+	      for (size_t j = 1; j<= d; j++) {
+		  Op.set(indices.at(j),indicesP.at(j),j*j-j);
+	      }
+	    }
+        else
+	if(opname == "I")
+	    {
+	      for (size_t j = 1; j<= d; j++) {
+		  Op.set(indices.at(j),indicesP.at(j),1);
+	      }
+	    }
+	else
             {
             Error("Operator \"" + opname + "\" name not recognized");
             }
