@@ -1,8 +1,16 @@
 #include "BoseHubbardMPO.h"
 
-BoseHubbardMPO::BoseHubbardMPO(AutoMPO baseMPO, size_t N)
-  : baseMPO(baseMPO), N(N) {
+BoseHubbardMPO::BoseHubbardMPO(SiteSet& sites, double J, double U, double eps)
+  : baseMPO(AutoMPO(sites)), N(sites.N()) {
 
+  for(int i = 1; i < N; ++i) {
+    baseMPO += J,"A",i,"Adag",i+1;
+    baseMPO += J,"Adag",i,"A",i+1;
+  }
+  for (int i = 1; i <= N; ++i) {
+    baseMPO += U/2.0,"N(N-1)",i;
+    baseMPO += eps,"N",i;
+  }
 }
 
 AutoMPO BoseHubbardMPO::updateMPO(double control){

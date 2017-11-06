@@ -10,7 +10,7 @@
 #include <functional>
 
 
-namespace itensor{
+using namespace itensor;
 
 class OptimalControl{
 private:
@@ -32,5 +32,4 @@ public:
 
 };
 
-} // end namespace
 #endif

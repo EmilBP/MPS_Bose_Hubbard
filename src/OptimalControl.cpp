@@ -36,6 +36,11 @@ std::vector<double> OptimalControl::calculateGradient(std::vector<double>& contr
   return g;
 }
 
+std::vector<double> OptimalControl::updateControl(std::vector<double>& gradient){
+  // PLACEHOLDER
+  return gradient;
+}
+
 std::vector<double> OptimalControl::OptimizeControl(
       std::vector<double>& control_init,
       double dt,
