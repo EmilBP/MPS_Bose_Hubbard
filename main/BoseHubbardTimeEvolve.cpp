@@ -1,6 +1,7 @@
   #include "itensor/all.h"
   #include "boson.h"
   #include "correlations.h"
+  #include "TimeEvolve.hpp"
   #include <vector>
   #include <fstream>
 
@@ -82,10 +83,10 @@
     //
     // Setup time evolution with Mott-Insulator (MI) Hamiltonian
     //
-    auto tau = 1e-3;
+    auto tau = 1e-2;
 
-    J = 0.03;
-    U = 2;
+    J = 0;
+    U = 1;
 
     for(int i = 1; i < N; ++i) {
       ampo2 += J,"A",i,"Adag",i+1;
@@ -105,7 +106,7 @@
     //
     vector<double> tvec = {0};
     auto args = Args("Cutoff=",1E-9,"Maxm=",50);
-    auto ttotal = 16;
+    auto ttotal = 3;
     auto nt = int(ttotal/tau);
 
 
@@ -122,14 +123,8 @@
 	}
     }
 
-    std::fstream myfile;
-    myfile.open("TimeEvolutionFractionData5part5sites_U2_J0_03_oneUop_ttotal_16_cplxStep.txt",std::fstream::out);
+    std::cout << condensateFraction.back() << std::endl;
 
-    for (size_t i = 0; i < tvec.size(); i++) {
-      myfile << tvec.at(i) << "\t";
-      myfile << condensateFraction.at(i) << "\n";
-    }
-    myfile.close();
 
 
     return 0;
