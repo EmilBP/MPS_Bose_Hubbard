@@ -5,12 +5,14 @@ OptimalControl::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, autoMPOstrate
 
 }
 
-double OptimalControl::CostFunction(IQMPS& psi, std::vector<double>& control){
+double OptimalControl::getCost(IQMPS& psi, std::vector<double>& control){
   // mssing gamma term
-  return 0.5*(1- overlap(psi_target,psi));
+  Cplx proj = overlap(psi_target,psi);
+  double normsquare = Real(proj*conj(proj));
+  return 0.5*(1-normsquare);
 }
 
-std::vector<AutoMPO> OptimalControl::updateMPOlist(std::vector<double>& control){
+std::vector<AutoMPO> OptimalControl::updateHamiltonian(std::vector<double>& control){
   std::vector<AutoMPO> v;
   v.reserve(control.size());
   for (auto &u : control) {
@@ -19,7 +21,7 @@ std::vector<AutoMPO> OptimalControl::updateMPOlist(std::vector<double>& control)
   return v;
 }
 
-std::vector<double> OptimalControl::calculateGradient(std::vector<double>& control, double dt){
+std::vector<double> OptimalControl::getAnalyticGradient(std::vector<double>& control, double dt){
   // missing gamma term
   std::vector<double> g;
   g.reserve(control.size());
@@ -28,10 +30,37 @@ std::vector<double> OptimalControl::calculateGradient(std::vector<double>& contr
   auto i3 = begin(control);
 
   while (i1 != e) {
-    g.emplace_back(dt*Real(overlap(*i1,IQMPO(MPOstrat.derivative_control(*i3)),*i2)));
+    g.emplace_back(dt*Real(overlap(*i1,IQMPO(MPOstrat.dHdu(*i3)),*i2)));
     ++i1;
     ++i2;
     ++i3;
+  }
+  return g;
+}
+
+std::vector<double> OptimalControl::getNumericGradient(
+      std::vector<double>& control, double epsilon,
+      double dt, const Args& args)
+{
+  double Jp, Jm;
+  std::vector<double> g;
+  std::vector<IQMPS> psi_temp;
+  std::vector<AutoMPO> tempMPO;
+  g.reserve(control.size());
+
+  for (auto& ui : control){
+    ui        += epsilon;
+    tempMPO    = updateHamiltonian(control);
+    psi_temp   = TimeEvolve(psi_init,tempMPO,dt*Cplx_i,args);
+    Jp         = getCost(psi_temp.back(),control);
+
+    ui        -= 2*epsilon;
+    tempMPO    = updateHamiltonian(control);
+    psi_temp  = TimeEvolve(psi_init,tempMPO,dt*Cplx_i,args);
+    Jm         = getCost(psi_temp.back(),control);
+
+    ui += epsilon;
+    g.emplace_back((Jp-Jm)/(2.0*epsilon));
   }
   return g;
 }
@@ -41,11 +70,12 @@ std::vector<double> OptimalControl::updateControl(std::vector<double>& gradient)
   return gradient;
 }
 
-std::vector<double> OptimalControl::OptimizeControl(
+std::vector<double> OptimalControl::Optimize(
       std::vector<double>& control_init,
       double dt,
       size_t maxeval,
-      const Args& args){
+      const Args& args)
+{
   IQMPS chi_T;
   std::vector<double> gradient;
   std::vector<AutoMPO> AmpoList;
@@ -53,22 +83,22 @@ std::vector<double> OptimalControl::OptimizeControl(
   costs.reserve(maxeval+1);
 
   for (size_t i = 0; i < maxeval; i++) {
-    AmpoList = updateMPOlist(control_init);
+    AmpoList = updateHamiltonian(control_init);
 
     psi_t = TimeEvolve(psi_init, AmpoList, dt*Cplx_i, args);
     chi_T = -Cplx_i * psi_target*overlap(psi_target,psi_t.back());
     chi_t = TimeEvolveBack(chi_T, AmpoList, dt*Cplx_i, args);
 
-    gradient = calculateGradient(control_init,dt);
+    gradient = getAnalyticGradient(control_init,dt);
     control_init = updateControl(gradient);
-    costs.emplace_back(CostFunction(psi_t.back(),control_init));
+    costs.emplace_back(getCost(psi_t.back(),control_init));
   }
   //
   //  get final cost
   //
-  AmpoList = updateMPOlist(control_init);
+  AmpoList = updateHamiltonian(control_init);
   psi_t = TimeEvolve(psi_init, AmpoList, dt*Cplx_i, args);
-  costs.emplace_back(CostFunction(psi_t.back(),control_init));
+  costs.emplace_back(getCost(psi_t.back(),control_init));
 
   return costs;
 }

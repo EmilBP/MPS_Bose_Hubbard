@@ -3,6 +3,7 @@
 
 #include "autoMPOstrategy.h"
 #include "boson.h"
+#include <math.h>
 
 using namespace itensor;
 
@@ -11,11 +12,16 @@ private:
   AutoMPO baseMPO;
   size_t N;
 
+  double getJ(double V0);
+  double getU(double V0);
+  double getdJdV(double V0);
+  double getdUdV(double V0);
+
 public:
-  BoseHubbardMPO(SiteSet& sites, double J, double U, double eps);
+  BoseHubbardMPO(SiteSet& sites);
 
   virtual AutoMPO updateMPO(double control);
-  virtual AutoMPO derivative_control(double control);
+  virtual AutoMPO dHdu(double control);
 };
 
 #endif
