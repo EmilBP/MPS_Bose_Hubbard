@@ -27,6 +27,8 @@ inline std::vector<IQMPS> TimeEvolve(IQMPS& psi, std::vector<AutoMPO>& ampo, Com
     psi_t.push_back(psi);
   }
 
+  // psi_t.pop_back();
+
   return psi_t;
 }
 
@@ -60,6 +62,8 @@ inline std::vector<IQMPS> TimeEvolveBack(IQMPS& psi, std::vector<AutoMPO>& ampo,
     fitApplyMPO(psi,expH1,psi,args);
     psi_t.push_back(psi);
   }
+
+  // psi_t.pop_back();
 
   std::reverse(psi_t.begin(),psi_t.end());
   return psi_t;

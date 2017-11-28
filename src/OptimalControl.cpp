@@ -3,13 +3,15 @@
 OptimalControl::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, autoMPOstrategy& MPOstrat, double gamma)
   : psi_target(psi_target), psi_init(psi_init), MPOstrat(MPOstrat), gamma(gamma){
 
+  std::vector<double> v;
+  std::cout << getCost(psi_init,v) << std::endl;
 }
 
 double OptimalControl::getCost(IQMPS& psi, std::vector<double>& control){
   // mssing gamma term
-  Cplx proj = overlap(psi_target,psi);
-  double normsquare = Real(proj*conj(proj));
-  return 0.5*(1-normsquare);
+  double re, im;
+  overlap(psi_target,psi,re,im);
+  return 0.5*(1-(re*re+im*im));
 }
 
 std::vector<AutoMPO> OptimalControl::updateHamiltonian(std::vector<double>& control){
@@ -26,16 +28,26 @@ std::vector<double> OptimalControl::getAnalyticGradient(std::vector<double>& con
   std::vector<double> g;
   g.reserve(control.size());
 
-  auto i1 = begin(chi_t), i2 = begin(psi_t), e = end(chi_t);
-  auto i3 = begin(control);
+  auto i1 = begin(chi_t), i2 = begin(psi_t);
+  auto i3 = begin(control), e = end(control);
 
-  while (i1 != e) {
-    g.emplace_back(dt*Real(overlap(*i1,IQMPO(MPOstrat.dHdu(*i3)),*i2)));
+
+  while (i3 != e) {
+    g.emplace_back(dt* overlapC(*i1,IQMPO(MPOstrat.dHdu(*i3)),*i2).real() );
     ++i1;
     ++i2;
     ++i3;
   }
   return g;
+}
+
+std::vector<double> OptimalControl::getAnalyticGradientTest(std::vector<double>& control, double dt, const Args& args){
+  auto ampo = updateHamiltonian(control);
+  psi_t = TimeEvolve(psi_init, ampo, dt*Cplx_i, args);
+  auto chi_T = -Cplx_i * psi_target*overlapC(psi_target,psi_t.back());
+  chi_t = TimeEvolveBack(chi_T, ampo, dt*Cplx_i, args);
+
+  return getAnalyticGradient(control,dt);
 }
 
 std::vector<double> OptimalControl::getNumericGradient(
@@ -56,12 +68,14 @@ std::vector<double> OptimalControl::getNumericGradient(
 
     ui        -= 2*epsilon;
     tempMPO    = updateHamiltonian(control);
-    psi_temp  = TimeEvolve(psi_init,tempMPO,dt*Cplx_i,args);
+    psi_temp   = TimeEvolve(psi_init,tempMPO,dt*Cplx_i,args);
     Jm         = getCost(psi_temp.back(),control);
 
     ui += epsilon;
+
     g.emplace_back((Jp-Jm)/(2.0*epsilon));
   }
+
   return g;
 }
 

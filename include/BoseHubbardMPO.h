@@ -12,13 +12,12 @@ private:
   AutoMPO baseMPO;
   size_t N;
 
+public:
+  BoseHubbardMPO(SiteSet& sites);
   double getJ(double V0);
   double getU(double V0);
   double getdJdV(double V0);
   double getdUdV(double V0);
-
-public:
-  BoseHubbardMPO(SiteSet& sites);
 
   virtual AutoMPO updateMPO(double control);
   virtual AutoMPO dHdu(double control);

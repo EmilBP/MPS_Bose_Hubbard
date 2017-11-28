@@ -30,6 +30,7 @@ public:
   std::vector<double> Optimize(std::vector<double>& control_init, double dt, size_t maxeval, const Args& args);
 
   std::vector<double> getAnalyticGradient(std::vector<double>& control,double dt);
+  std::vector<double> getAnalyticGradientTest(std::vector<double>& control,double dt,const Args& args);
   std::vector<double> getNumericGradient(std::vector<double>& control,double epsilon, double dt, const Args& args);
 };
 

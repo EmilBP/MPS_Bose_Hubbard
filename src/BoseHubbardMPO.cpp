@@ -7,7 +7,7 @@ BoseHubbardMPO::BoseHubbardMPO(SiteSet& sites)
 
 double BoseHubbardMPO::getJ(double V0){
   // in units of E_rec
-  return 4.0/sqrt(M_PI)*pow(V0,0.75)*exp(-2*sqrt(V0));
+  return 4.0/sqrt(M_PI)*pow(V0,0.75)*exp(-2.0*sqrt(V0));
 }
 
 double BoseHubbardMPO::getU(double V0){
@@ -17,7 +17,7 @@ double BoseHubbardMPO::getU(double V0){
 }
 
 double BoseHubbardMPO::getdJdV(double V0){
-  return exp(-2*sqrt(V0)) * (1.69257 - 2.25676*sqrt(V0))*pow(V0,-0.25);
+  return exp(-2.0*sqrt(V0)) * (1.69257 - 2.25676*sqrt(V0))*pow(V0,-0.25);
 }
 
 double BoseHubbardMPO::getdUdV(double V0){
