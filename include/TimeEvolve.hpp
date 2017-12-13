@@ -13,7 +13,7 @@ namespace itensor{
 //  time evolution methods
 //
 
-inline std::vector<IQMPS> TimeEvolve(IQMPS& psi, std::vector<AutoMPO>& ampo, Complex tau, const Args& args){
+inline std::vector<IQMPS> TimeEvolve(IQMPS psi, std::vector<AutoMPO>& ampo, Complex tau, const Args& args){
   std::vector<IQMPS> psi_t;
   psi_t.reserve(ampo.size()+1);
   psi_t.push_back(psi);

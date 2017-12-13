@@ -1,7 +1,7 @@
 #include "BoseHubbardMPO.h"
 
-BoseHubbardMPO::BoseHubbardMPO(SiteSet& sites)
-  : baseMPO(AutoMPO(sites)), N(sites.N()) {
+BoseHubbardMPO::BoseHubbardMPO(SiteSet& sites, double trapStr)
+  : baseMPO(AutoMPO(sites)), N(sites.N()), trapStr(trapStr), L(sites.N()) {
 
 }
 
@@ -36,6 +36,7 @@ AutoMPO BoseHubbardMPO::updateMPO(double control){
   }
   for (int i = 1; i <= N; ++i) {
     ampo += U/2.0,"N(N-1)",i;
+    ampo += 0.5*trapStr*(i-0.5*(L-1))*(i-0.5*(L-1)),"N",i;
   }
 
   return ampo;
