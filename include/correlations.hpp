@@ -1,7 +1,13 @@
-#include "correlations.h"
+#ifndef CORRELATIONS_H
+#define CORRELATIONS_H
+
+#include "itensor/all.h"
 #include <iostream>
 
-Cplx correlations::correlationFunction(SiteSet const& sites, IQMPS& psi, std::string const& opname1, int i, std::string const& opname2, int j){
+using namespace itensor;
+
+
+inline Cplx correlationFunction(SiteSet const& sites, IQMPS& psi, std::string const& opname1, int i, std::string const& opname2, int j){
   auto op_i = sites.op(opname1,i);
   auto op_j = sites.op(opname2,j);
 
@@ -45,7 +51,7 @@ Cplx correlations::correlationFunction(SiteSet const& sites, IQMPS& psi, std::st
   return C.cplx(); //or C.cplx() if expecting complex
 }
 
-ITensor correlations::correlationMatrix(SiteSet const& sites, IQMPS& psi, std::string const& opname1, std::string const& opname2){
+inline ITensor correlationMatrix(SiteSet const& sites, IQMPS& psi, std::string const& opname1, std::string const& opname2){
   int N = sites.N();
   Index rho_i("rho i",N),
         rho_j = prime(rho_i);
@@ -64,7 +70,7 @@ ITensor correlations::correlationMatrix(SiteSet const& sites, IQMPS& psi, std::s
   return rho;
 }
 
-Real correlations::correlationTerm(SiteSet const& sites, IQMPS & psi, std::string const& opname1, std::string const& opname2){
+inline Real correlationTerm(SiteSet const& sites, IQMPS& psi, std::string const& opname1, std::string const& opname2){
   auto rho = correlationMatrix(sites,psi,opname1,opname2);
 
   ITensor V, D;
@@ -76,3 +82,13 @@ Real correlations::correlationTerm(SiteSet const& sites, IQMPS & psi, std::strin
 
   return D.real(index1(1),index2(1));
 }
+
+inline Cplx expectationValue(SiteSet const& sites, IQMPS& psi, std::string const& opname, int i){
+  auto op = sites.op(opname,i);
+  psi.position(i);
+  auto ket = psi.A(i);
+  auto bra = dag(prime(ket,Site));
+  return (bra*op*ket).cplx();
+}
+
+#endif

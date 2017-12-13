@@ -1,6 +1,6 @@
 #include "itensor/all.h"
 #include "boson.h"
-#include "correlations.h"
+#include "correlations.hpp"
 #include "OptimalControl.hpp"
 #include "BoseHubbardMPO.h"
 #include "InitializeState.hpp"
