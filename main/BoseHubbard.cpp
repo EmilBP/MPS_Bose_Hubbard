@@ -1,6 +1,6 @@
 #include "itensor/all.h"
 #include "boson.h"
-#include "correlations.h"
+#include "correlations.hpp"
 
 using namespace itensor;
 
@@ -76,11 +76,11 @@ int main()
     printfln("\nGround State Energy = %.10f",energy);
     printfln("Wavefunc norm = %.10f",norm(psi));
 
-    auto test = correlations::correlationTerm(sites,psi,"Adag","A");
+    auto test = correlationTerm(sites,psi,"Adag","A");
     double fc = test/Npart;
     printfln("\nCorrelation = %.10f",fc);
 
-    auto rhoMat = correlations::correlationMatrix(sites,psi,"Adag","A");
+    auto rhoMat = correlationMatrix(sites,psi,"Adag","A");
     auto index = rhoMat.inds();
 
     for (size_t i = 1; i <= N; i++) {

@@ -1,6 +1,6 @@
 #include "itensor/all.h"
 #include "boson.h"
-#include "correlations.h"
+#include "correlations.hpp"
 #include <vector>
 #include <fstream>
 
@@ -85,8 +85,8 @@ int main(){
       //  Optimize with DMRG and get condensate fraction
       //
       auto energy = dmrg(psi,H,sweeps,"Quiet");
-      auto lambda1 = correlations::correlationTerm(sites,psi,"Adag","A");
-      correlationMatrices.emplace_back(correlations::correlationMatrix(sites,psi,"Adag","A"));
+      auto lambda1 = correlationTerm(sites,psi,"Adag","A");
+      correlationMatrices.emplace_back(correlationMatrix(sites,psi,"Adag","A"));
       double fc = lambda1/Npart;
       output[Ui][j+1] = fc;
       output[Ui][0] = U;

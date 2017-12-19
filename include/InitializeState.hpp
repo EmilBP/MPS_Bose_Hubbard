@@ -34,9 +34,9 @@ inline IQMPS SetupSuperfluid(SiteSet const& sites, int Npart){
   }
   auto H = IQMPO(ampo);
 
-  auto sweeps = Sweeps(5);
-  sweeps.maxm() = 10,20,50,100,200;
-  sweeps.cutoff() = 1E-9;
+  auto sweeps = Sweeps(10);
+  sweeps.maxm() = 10,20,50,100,200,250,300;
+  sweeps.cutoff() = 1E-11;
   sweeps.niter() = 2;
   sweeps.noise() = 1E-7,1E-8,0.0;
   println(sweeps);
@@ -77,7 +77,7 @@ inline IQMPS SetupMottInsulator(SiteSet const& sites, int Npart){
   }
   auto H = IQMPO(ampo);
 
-  auto sweeps = Sweeps(5);
+  auto sweeps = Sweeps(10);
   sweeps.maxm() = 10,20,50,100,200;
   sweeps.cutoff() = 1E-9;
   sweeps.niter() = 2;

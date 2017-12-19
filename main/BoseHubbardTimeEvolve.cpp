@@ -1,6 +1,6 @@
   #include "itensor/all.h"
   #include "boson.h"
-  #include "correlations.h"
+  #include "correlations.hpp"
   #include "TimeEvolve.hpp"
   #include <vector>
   #include <fstream>
@@ -75,7 +75,7 @@
     // Save condensate fraction
     //
     vector<double> condensateFraction;
-    auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
+    auto rho = correlationTerm(sites,psi,"Adag","A");
     double fc = rho/Npart;
     condensateFraction.push_back(fc);
 
@@ -117,7 +117,7 @@
       fitApplyMPO(psi,expiHdt_2,psi,args);
 	if (n % 10) {
             tvec.push_back(n*tau);
-            auto rho = correlations::correlationTerm(sites,psi,"Adag","A");
+            auto rho = correlationTerm(sites,psi,"Adag","A");
             auto fc = rho/Npart;
             condensateFraction.push_back(fc);
 	}

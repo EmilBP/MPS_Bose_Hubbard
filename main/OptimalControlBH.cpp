@@ -1,6 +1,6 @@
 #include "itensor/all.h"
 #include "boson.h"
-#include "correlations.h"
+#include "correlations.hpp"
 #include "OptimalControl.hpp"
 #include "BoseHubbardMPO.h"
 #include "InitializeState.hpp"
@@ -20,7 +20,7 @@ int main()
   auto sites  = Boson(N,locDim);
   auto psi_i  = SetupSuperfluid(sites,Npart);
   auto psi_f  = SetupMottInsulator(sites,Npart);
-  auto BHMPO  = BoseHubbardMPO(sites,0,0,0);
+  auto BHMPO  = BoseHubbardMPO(sites);
   auto gamma  = 0;
 
   auto opt    = OptimalControl(psi_f, psi_i, BHMPO, gamma);
@@ -36,7 +36,7 @@ int main()
   size_t maxeval  = 1e2;
   vector<double> control(Nsteps, 0.0);
 
-  vector<double> costs = opt.OptimizeControl(control, dt, maxeval, args);
+  vector<double> costs = opt.Optimize(control, dt, maxeval, args);
 
   return 0;
   }
