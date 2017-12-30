@@ -7,18 +7,18 @@
 using namespace arma;
 
 mat Hamiltonian(int L, double V0, double q){
-  vec lgrid   = linspace<vec>(-L,L,2*L+1);
-  mat H       = zeros<mat>(2*L+1,2*L+1);
-  H.diag()    = (q*q+V0/2.0)*ones<vec>(2*L+1) + 4.0*q*lgrid + 4.0*pow(lgrid,2);
-  H.diag(-1)  = -V0/4.0*ones<vec>(2*L);
-  H.diag(+1)  = -V0/4.0*ones<vec>(2*L);
+  vec lgrid   = linspace<vec>(-L+1,L-1,2*L-1);
+  mat H       = zeros<mat>(2*L-1,2*L-1);
+  H.diag()    = (q*q+V0/2.0)*ones<vec>(2*L-1) + 4.0*q*lgrid + 4.0*pow(lgrid,2);
+  H.diag(-1)  = -V0/4.0*ones<vec>(2*L-2);
+  H.diag(+1)  = -V0/4.0*ones<vec>(2*L-2);
   return H;
 }
 
 cx_mat calcBlochFuncs(vec& qvals, vec& xvals, double V0, int L){
   std::complex<double> cplx_i(0,1);
-  mat H, eigvec, coeff(2*L+1,qvals.n_rows);
-  vec eigval, lgrid = linspace<vec>(-L,L,2*L+1);
+  mat H, eigvec, coeff(2*L-1,qvals.n_rows);
+  vec eigval, lgrid = linspace<vec>(-L+1,L-1,2*L-1);
   cx_mat BlochFunc(xvals.n_rows,qvals.n_rows);
 
   for (size_t i = 0; i < qvals.n_rows; i++) {
@@ -32,7 +32,8 @@ cx_mat calcBlochFuncs(vec& qvals, vec& xvals, double V0, int L){
     }
 
     for (size_t j = 0; j < xvals.n_rows; j++) {
-      BlochFunc(j,i) = dot(exp(cplx_i*(qvals(i)+2.0*lgrid)*datum::pi*xvals(j)),coeff.col(i));
+      BlochFunc(j,i) = dot(exp(cplx_i*(qvals(i)+2.0*lgrid)*2.0*datum::pi*xvals(j)),coeff.col(i));
+      // k_lat = 2*pi/a_lat or pi/a_lat  ??  need to compare with table
     }
   }
 
@@ -50,44 +51,60 @@ cx_vec calcWannierFunc(cx_mat& BlochFunc, vec& xgrid){
 
 vec getWannierAtSite_j(cx_vec& w0, vec& xgrid, int j, double a_lat){
   vec wj;
-  vec site = xgrid-0.5*j;
+  vec site = xgrid-0.5*j*a_lat;
   vec realw = real(w0);
-  interp1(xgrid,realw,site,wj);
+  interp1(xgrid,realw,site,wj,"linear",0);
   return wj;
 }
 
 vec calcPotential(vec& xgrid, double V0, double a_lat){
-  return V0*pow(sin(datum::pi/a_lat*xgrid),2);
+  return V0*pow(sin(2.0*datum::pi/a_lat*xgrid),2);
 }
 
 double calcU(vec& xgrid, cx_vec& w){
-  double g = 1;
-  vec normsq = cdot(w,w);
-  return g*as_scalar( trapz( pow( normsq ,2)));
+  double g = 0.00502320473*2.0/datum::pi;
+  //vec normsq = real(conj(w)%w);
+  return g*as_scalar(trapz(xgrid,pow( real(w) ,4)));
 }
 
-double calcJ(){
+double calcJ(vec& xgrid, cx_vec& w0, double V0, double a_lat){
   double dx = xgrid(1)-xgrid(0);
-  vec del(w.n_rows);
-  for (size_t i = 1; i < w.n_rows-1; i++) {
-    del(i) = (w(i+1) + w(i-1) - 2.0*w(i))/dx/dx;
+  cx_vec del(w0.n_rows);
+  for (size_t i = 1; i < w0.n_rows-1; i++) {
+    del(i) = (w0(i+1) + w0(i-1) - 2.0*w0(i))/dx/dx;
   }
-  del(0) = del(w.n_rows-1) = 0;
-  
+  del(0) = (-5.0*w0(1)+4.0*w0(2)-w0(3)+2.0*w0(0))/dx/dx;
+  del(w0.n_rows-1) = (-5.0*w0(w0.n_rows-2)+4.0*w0(w0.n_rows-3)-w0(w0.n_rows-4)+2.0*w0(w0.n_rows-1))/dx/dx;
+
+  auto kin = -a_lat*a_lat/4.0/datum::pi/datum::pi*del;
+
+  cx_vec pot = calcPotential(xgrid,V0,a_lat)%w0;
+  vec w1 = getWannierAtSite_j(w0,xgrid,-1,a_lat);
+  cx_vec integrand = -(kin+pot)%w1;
+
+  return as_scalar(trapz(xgrid,real(integrand) ));
 }
 
 int main() {
 
-  int L         = 10;
+  int L         = 6;
   double a_lat  = 1; // a_lat omitted in many formulas
   double V0     = 4;
 
   auto qgrid    = linspace<vec>(-1,1,101);
   auto xgrid    = linspace<vec>(-L*a_lat,L*a_lat,1000);
-  auto lgrid    = linspace<vec>(-L,L,2*L+1);
+  auto lgrid    = linspace<vec>(-L+1,L-1,2*L-1);
 
   auto Bloch    = calcBlochFuncs(qgrid,xgrid,V0,L);
   auto Wannier  = calcWannierFunc(Bloch,xgrid);
+
+  auto U        = calcU(xgrid,Wannier);
+  auto J        = calcJ(xgrid,Wannier,V0,a_lat);
+
+  std::cout << "U = " << U << std::endl;
+  std::cout << "J = " << J << std::endl;
+  std::cout << "U/J = " << U/J << std::endl;
+
 
   Gnuplot gp;
   mat Potplot     = join_horiz(xgrid, calcPotential(xgrid,V0,a_lat));
