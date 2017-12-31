@@ -61,10 +61,14 @@ vec calcPotential(vec& xgrid, double V0, double a_lat){
   return V0*pow(sin(2.0*datum::pi/a_lat*xgrid),2);
 }
 
-double calcU(vec& xgrid, cx_vec& w){
-  double g = 0.00502320473*2.0/datum::pi;
-  //vec normsq = real(conj(w)%w);
-  return g*as_scalar(trapz(xgrid,pow( real(w) ,4)));
+double calcU(vec& xgrid, cx_mat& w){
+  double g   = 0.00502320473*2.0/datum::pi; //a_scat in units of a_lat
+  mat normsq = real(conj(w)%w);
+
+  normsq.each_col( [&](vec& a){
+    g *= as_scalar(trapz(xgrid,pow( a ,2)));
+  });
+  return g;
 }
 
 double calcJ(vec& xgrid, cx_vec& w0, double V0, double a_lat){
@@ -73,23 +77,24 @@ double calcJ(vec& xgrid, cx_vec& w0, double V0, double a_lat){
   for (size_t i = 1; i < w0.n_rows-1; i++) {
     del(i) = (w0(i+1) + w0(i-1) - 2.0*w0(i))/dx/dx;
   }
-  del(0) = (-5.0*w0(1)+4.0*w0(2)-w0(3)+2.0*w0(0))/dx/dx;
-  del(w0.n_rows-1) = (-5.0*w0(w0.n_rows-2)+4.0*w0(w0.n_rows-3)-w0(w0.n_rows-4)+2.0*w0(w0.n_rows-1))/dx/dx;
+  del(0)            = (-5.0*w0(1) + 4.0*w0(2) - w0(3) + 2.0*w0(0))/dx/dx;
+  del(w0.n_rows-1)  = (-5.0*w0(w0.n_rows-2) + 4.0*w0(w0.n_rows-3)
+                      - w0(w0.n_rows-4) + 2.0*w0(w0.n_rows-1))/dx/dx;
 
-  auto kin = -a_lat*a_lat/4.0/datum::pi/datum::pi*del;
-
-  cx_vec pot = calcPotential(xgrid,V0,a_lat)%w0;
-  vec w1 = getWannierAtSite_j(w0,xgrid,-1,a_lat);
-  cx_vec integrand = -(kin+pot)%w1;
+  cx_vec kin        = -a_lat*a_lat/4.0/datum::pi/datum::pi*del;
+  cx_vec pot        = calcPotential(xgrid,V0,a_lat)%w0;
+  vec w1            = getWannierAtSite_j(w0,xgrid,-1,a_lat);
+  cx_vec integrand  = -(kin+pot)%w1;
 
   return as_scalar(trapz(xgrid,real(integrand) ));
 }
 
 int main() {
 
-  int L         = 6;
+  int L         = 9;
   double a_lat  = 1; // a_lat omitted in many formulas
-  double V0     = 4;
+  double V0     = 4.5;
+  double V0_T   = 20;
 
   auto qgrid    = linspace<vec>(-1,1,101);
   auto xgrid    = linspace<vec>(-L*a_lat,L*a_lat,1000);
@@ -97,8 +102,13 @@ int main() {
 
   auto Bloch    = calcBlochFuncs(qgrid,xgrid,V0,L);
   auto Wannier  = calcWannierFunc(Bloch,xgrid);
+  auto Bloch_T  = calcBlochFuncs(qgrid,xgrid,V0_T,L);
+  auto Wannier_T= calcWannierFunc(Bloch_T,xgrid);
 
-  auto U        = calcU(xgrid,Wannier);
+  cx_mat W_tmp  = join_horiz(Wannier,Wannier_T);
+  cx_mat W_full = join_horiz(W_tmp,Wannier_T);
+
+  auto U        = calcU(xgrid,W_full);
   auto J        = calcJ(xgrid,Wannier,V0,a_lat);
 
   std::cout << "U = " << U << std::endl;
