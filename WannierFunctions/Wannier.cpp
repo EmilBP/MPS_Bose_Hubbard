@@ -89,9 +89,35 @@ double calcJ(vec& xgrid, cx_vec& w0, double V0, double a_lat){
   return as_scalar(trapz(xgrid,real(integrand) ));
 }
 
+mat calculateParameters(int L, double a_lat, double V0min, double V0max, size_t vals){
+  double V0_T   = 20;
+  auto qgrid    = linspace<vec>(-1,1,101);
+  auto xgrid    = linspace<vec>(-L*a_lat,L*a_lat,1000);
+  auto lgrid    = linspace<vec>(-L+1,L-1,2*L-1);
+  auto Vgrid    = linspace<vec>(V0min,V0max,vals);
+  mat data      = zeros<mat>(vals,3);
+
+  for (size_t i = 0; i < vals; i++) {
+    auto Bloch    = calcBlochFuncs(qgrid,xgrid,Vgrid(i),L);
+    auto Wannier  = calcWannierFunc(Bloch,xgrid);
+    auto Bloch_T  = calcBlochFuncs(qgrid,xgrid,V0_T,L);
+    auto Wannier_T= calcWannierFunc(Bloch_T,xgrid);
+
+    cx_mat W_tmp  = join_horiz(Wannier,Wannier_T);
+    cx_mat W_full = join_horiz(W_tmp,Wannier_T);
+
+    data(i,0)     = Vgrid(i);
+    data(i,1)     = calcU(xgrid,W_full);
+    data(i,2)     = calcJ(xgrid,Wannier,Vgrid(i),a_lat);
+  }
+
+  data.save("UJparams",raw_ascii);
+  return data;
+}
+
 int main() {
 
-  int L         = 9;
+  int L         = 36;
   double a_lat  = 1; // a_lat omitted in many formulas
   double V0     = 4.5;
   double V0_T   = 20;
@@ -115,6 +141,7 @@ int main() {
   std::cout << "J = " << J << std::endl;
   std::cout << "U/J = " << U/J << std::endl;
 
+  // calculateParameters(L,a_lat,1,20,500);
 
   Gnuplot gp;
   mat Potplot     = join_horiz(xgrid, calcPotential(xgrid,V0,a_lat));
