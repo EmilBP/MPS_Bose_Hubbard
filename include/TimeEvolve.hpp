@@ -17,7 +17,10 @@ inline std::vector<IQMPS> TimeEvolve(IQMPS psi, std::vector<AutoMPO>& ampo, Comp
   std::vector<IQMPS> psi_t;
   psi_t.reserve(ampo.size()+1);
   psi_t.push_back(psi);
+  size_t index = 0;
 
+  std::cout << "Time Evolution" << '\n';
+  std::cout << index << "/" << ampo.size()+1 << '\r';
   for (auto &a : ampo) {
     auto expH1 = toExpH<IQTensor>(a,tau*0.5*(1.0+Cplx_i));
     auto expH2 = toExpH<IQTensor>(a,tau*0.5*(1.0-Cplx_i));
@@ -25,7 +28,9 @@ inline std::vector<IQMPS> TimeEvolve(IQMPS psi, std::vector<AutoMPO>& ampo, Comp
     fitApplyMPO(psi,expH2,psi,args);
     fitApplyMPO(psi,expH1,psi,args);
     psi_t.push_back(psi);
+    std::cout << index++ << "/" << ampo.size()+1 << '\r';
   }
+  std::cout << '\n';
 
   // psi_t.pop_back();
 
@@ -40,11 +45,15 @@ inline std::vector<IQMPS> TimeEvolve(IQMPS& psi, AutoMPO& ampo, Complex tau, siz
   psi_t.reserve(Nsteps);
   psi_t.push_back(psi);
 
+  std::cout << "Time Evolution" << '\n';
+  std::cout << 0 << "/" << Nsteps << '\r';
   for (size_t t = 0; t < Nsteps; ++t) {
     fitApplyMPO(psi,expH2,psi,args);
     fitApplyMPO(psi,expH1,psi,args);
     psi_t.push_back(psi);
+    std::cout << t+1 << "/" << Nsteps << '\r';
   }
+  std::cout << '\n';
 
   return psi_t;
 }

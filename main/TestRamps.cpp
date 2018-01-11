@@ -5,6 +5,11 @@
 #include "InitializeState.hpp"
 #include "BoseHubbardMPO.h"
 #include <math.h>
+#include <string>
+#include <fstream>
+#include <time.h>
+
+
 
 using namespace itensor;
 
@@ -14,6 +19,7 @@ double getRamp(double t, double T){
 }
 
 int main(){
+  clock_t begin = clock();
   int N       = 32;
   int Npart   = 16;
   int locDim  = 8;
@@ -22,11 +28,10 @@ int main(){
   //
   //  setup trap
   //
-  double m        = 1;
-  double omega    = 1;
-  double a_lat    = 1;
-  double trapStr  = m*omega*omega*a_lat*a_lat;
+  double trapStr  = 0.00242; // 0.5*m*omega^2 a_lat² in units of E_rec
   auto BHMPO      = BoseHubbardMPO(sites,trapStr);
+  std::string filename = "UJparams";
+  BHMPO.loadUJdata(filename);
 
   //
   //  setup initial state
@@ -35,31 +40,39 @@ int main(){
   auto H_init     = IQMPO(ampo_init);
   auto state      = InitState(sites);
   int p           = Npart;
-  for(int i = 3*N/4; i >= 1; --i){
-      if (p >= 1) {
-        println("Singly occupying site ",i);
+  for(int i = N; i >= 1; --i){
+      if (i <= 3*N/4 && p >= 1) {
         state.set(i,"Occ1");
         p -= 1;
       }
-      else { state.set(i,"Emp"); }
+      else {
+        state.set(i,"Emp");
+      }
   }
   auto psi        = IQMPS(state);
 
-  auto sweeps     = Sweeps(5);
-  sweeps.maxm()   = 20,30,50,100,200;
-  sweeps.cutoff() = 1E-8;
+  auto sweeps     = Sweeps(30);
+  sweeps.maxm()   = 20,30,50,100,200,250,300;
+  sweeps.cutoff() = 1E-10;
   sweeps.niter()  = 2;
   sweeps.noise()  = 1E-7,1E-8,0;
   auto energy     = dmrg(psi,H_init,sweeps,"Quiet");
+  clock_t end = clock();
+  std::cout << "Runtime = " <<  double(end - begin) / CLOCKS_PER_SEC << std::endl;
 
+  auto psi_0 = psi;
+
+  for (size_t i = 1; i <= N; i++) {
+    std::cout << expectationValue(sites,psi_0,"N",i) << '\n';
+  }
   //
   //  setup ramp
   //
 
-  auto args   = Args("Cutoff=",1E-8,"Maxm=",200);
+  auto args   = Args("Cutoff=",1E-8,"Maxm=",150);
   double eps  = 1e-6;
-  double T    = 11.75 * 1e-3;
-  double dt   = T/1e2;
+  double T    = 11.75*1e-3 *12741.13; // t/hbar units of (E_rec)^-1
+  double dt   = T/1e4;
   double temp = 0;
 
   std::vector<double> times;
@@ -75,7 +88,6 @@ int main(){
   }
 
   for (auto& u : ramp){
-    std::cout << "V0: " << u << " J: " << BHMPO.getJ(u) << ". U: " << BHMPO.getU(u) << std::endl;
     mpos.emplace_back(BHMPO.updateMPO(u));
   }
 
@@ -87,19 +99,38 @@ int main(){
   std::vector<Cplx> variances;
   for (auto& psi_i : psi_t){
     Cplx vartemp = 0;
-    for (size_t i = N/2-3; i < N/2+4; i++) {
-      auto var0 = expectationValue(sites,psi,"NN",i) - pow(expectationValue(sites,psi,"N",i),2);
+    for (size_t i = N/2-4; i < N/2+4; i++) {
+      double var0 = real(expectationValue(sites,psi_0,"NN",i) - pow(expectationValue(sites,psi_0,"N",i),2));
       vartemp  += (expectationValue(sites,psi_i,"NN",i) - pow(expectationValue(sites,psi_i,"N",i),2))/var0;
     }
     variances.emplace_back(vartemp/8.0);
   }
 
   //
-  // print
+  // print ans save data
   //
-  std::cout << "Variances:" << std::endl;
-  for (auto& v : variances){
-    std::cout << "\t" << v << "\n";
+  std::ofstream outFile("RampTestData.txt");
+
+  for (size_t i = 0; i < ramp.size(); i++) {
+    double U,J,temp,temp2;
+    BHMPO.interpolateData(ramp[i],U,J,temp,temp2);
+    std::cout << "t = " << times[i]*1e3 /12741.13 << '\t';
+    std::cout << "V0 = " << ramp[i] << '\t';
+    std::cout << "U = " << U << '\t';
+    std::cout << "J = " << J << '\t';
+    std::cout << "U/J = " << U/J << '\t';
+    std::cout << "F = " << real(variances[i]) << '\n';
+
+    outFile << times[i]*1e3 /12741.13 << '\t';
+    outFile << ramp[i] << '\t';
+    outFile << U << '\t';
+    outFile << J << '\t';
+    outFile << U/J << '\t';
+    outFile << real(variances[i]) << '\n';
+  }
+
+  for (size_t i = 1; i <= N; i++) {
+    std::cout << expectationValue(sites,psi_t.back(),"N",i) << '\n';
   }
 
   return 0;

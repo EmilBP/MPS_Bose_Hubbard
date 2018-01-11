@@ -24,7 +24,7 @@ int main(){
   auto gamma  = 0;
 
   auto opt    = OptimalControl(psi_f, psi_i, BHMPO, gamma);
-  
+
   //
   //  setup parameters
   //
@@ -44,10 +44,6 @@ int main(){
     temp += dt;
     times.emplace_back(temp);
     ramp.emplace_back(getRamp(temp));
-  }
-
-  for (auto& u : ramp){
-    std::cout << "V0: " << u << " J: " << BHMPO.getJ(u) << ". U: " << BHMPO.getU(u) << std::endl;
   }
 
   auto anal   = opt.getAnalyticGradientTest(ramp,dt,args);
