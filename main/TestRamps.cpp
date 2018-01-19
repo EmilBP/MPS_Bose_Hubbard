@@ -7,8 +7,6 @@
 #include <math.h>
 #include <string>
 #include <fstream>
-#include <time.h>
-
 
 
 using namespace itensor;
@@ -19,8 +17,7 @@ double getRamp(double t, double T){
 }
 
 int main(){
-  clock_t begin = clock();
-  int N       = 32;
+  int N       = 16;
   int Npart   = 16;
   int locDim  = 8;
   auto sites  = Boson(N,locDim);
@@ -40,8 +37,17 @@ int main(){
   auto H_init     = IQMPO(ampo_init);
   auto state      = InitState(sites);
   int p           = Npart;
+  // for(int i = N; i >= 1; --i){
+  //     if (i <= 3*N/4 && p >= 1) {
+  //       state.set(i,"Occ1");
+  //       p -= 1;
+  //     }
+  //     else {
+  //       state.set(i,"Emp");
+  //     }
+  // }
   for(int i = N; i >= 1; --i){
-      if (i <= 3*N/4 && p >= 1) {
+      if ( p >= 1) {
         state.set(i,"Occ1");
         p -= 1;
       }
@@ -57,8 +63,6 @@ int main(){
   sweeps.niter()  = 2;
   sweeps.noise()  = 1E-7,1E-8,0;
   auto energy     = dmrg(psi,H_init,sweeps,"Quiet");
-  clock_t end = clock();
-  std::cout << "Runtime = " <<  double(end - begin) / CLOCKS_PER_SEC << std::endl;
 
   auto psi_0 = psi;
 
@@ -69,10 +73,10 @@ int main(){
   //  setup ramp
   //
 
-  auto args   = Args("Cutoff=",1E-8,"Maxm=",150);
+  auto args   = Args("Cutoff=",1E-9,"Maxm=",300);
   double eps  = 1e-6;
   double T    = 11.75*1e-3 *12741.13; // t/hbar units of (E_rec)^-1
-  double dt   = T/1e4;
+  double dt   = T/1e3;
   double temp = 0;
 
   std::vector<double> times;
@@ -109,25 +113,25 @@ int main(){
   //
   // print ans save data
   //
-  std::ofstream outFile("RampTestData.txt");
+  // std::ofstream outFile("RampTestData.txt");
 
-  for (size_t i = 0; i < ramp.size(); i++) {
-    double U,J,temp,temp2;
-    BHMPO.interpolateData(ramp[i],U,J,temp,temp2);
-    std::cout << "t = " << times[i]*1e3 /12741.13 << '\t';
-    std::cout << "V0 = " << ramp[i] << '\t';
-    std::cout << "U = " << U << '\t';
-    std::cout << "J = " << J << '\t';
-    std::cout << "U/J = " << U/J << '\t';
-    std::cout << "F = " << real(variances[i]) << '\n';
-
-    outFile << times[i]*1e3 /12741.13 << '\t';
-    outFile << ramp[i] << '\t';
-    outFile << U << '\t';
-    outFile << J << '\t';
-    outFile << U/J << '\t';
-    outFile << real(variances[i]) << '\n';
-  }
+  // for (size_t i = 0; i < ramp.size(); i++) {
+  //   double U,J,temp,temp2;
+  //   BHMPO.interpolateData(ramp[i],U,J,temp,temp2);
+  //   std::cout << "t = " << times[i]*1e3 /12741.13 << '\t';
+  //   std::cout << "V0 = " << ramp[i] << '\t';
+  //   std::cout << "U = " << U << '\t';
+  //   std::cout << "J = " << J << '\t';
+  //   std::cout << "U/J = " << U/J << '\t';
+  //   std::cout << "F = " << real(variances[i]) << '\n';
+  //
+  //   outFile << times[i]*1e3 /12741.13 << '\t';
+  //   outFile << ramp[i] << '\t';
+  //   outFile << U << '\t';
+  //   outFile << J << '\t';
+  //   outFile << U/J << '\t';
+  //   outFile << real(variances[i]) << '\n';
+  // }
 
   for (size_t i = 1; i <= N; i++) {
     std::cout << expectationValue(sites,psi_t.back(),"N",i) << '\n';

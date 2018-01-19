@@ -52,7 +52,7 @@ AutoMPO BoseHubbardMPO::updateMPO(double control){
   }
   for (int i = 1; i <= N; ++i) {
     ampo += U/2.0,"N(N-1)",i;
-    ampo += overlayTrapDepth*(i-0.5*(L-1))*(i-0.5*(L-1)),"N",i;
+    //ampo += overlayTrapDepth*(i-0.5*(L-1))*(i-0.5*(L-1)),"N",i;
   }
 
   return ampo;

@@ -69,8 +69,8 @@ inline IQMPS SetupMottInsulator(SiteSet const& sites, int Npart){
 
   auto ampo = AutoMPO(sites);
   for(int i = 1; i < N; ++i) {
-    ampo += 1e-3,"A",i,"Adag",i+1;
-    ampo += 1e-3,"Adag",i,"A",i+1;
+    ampo += -1e-3,"A",i,"Adag",i+1;
+    ampo += -1e-3,"Adag",i,"A",i+1;
   }
   for(int i = 1; i <= N; ++i) {
     ampo += 0.5,"N(N-1)",i;

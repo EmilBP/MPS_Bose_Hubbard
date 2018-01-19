@@ -8,8 +8,8 @@
 using namespace itensor;
 
 
-double getRamp(double t){
-  return 3+14/0.1*t;
+double getRamp(double t, double T){
+  return 3+11/T*t;
 }
 
 int main(){
@@ -21,6 +21,8 @@ int main(){
   auto psi_i  = SetupSuperfluid(sites,Npart);
   auto psi_f  = SetupMottInsulator(sites,Npart);
   auto BHMPO  = BoseHubbardMPO(sites);
+  std::string filename = "UJparams";
+  BHMPO.loadUJdata(filename);
   auto gamma  = 0;
 
   auto opt    = OptimalControl(psi_f, psi_i, BHMPO, gamma);
@@ -29,21 +31,21 @@ int main(){
   //  setup parameters
   //
 
-  auto args   = Args("Cutoff=",1E-11,"Maxm=",400);
+  auto args   = Args("Cutoff=",1E-8,"Maxm=",200);
   double eps  = 1e-6;
-  double dt   = 1e-2;
-  double T    = 0.1;
+  double dt   = 1e-4;
+  double T    = 1;
   double temp = 0;
 
   std::vector<double> times;
   std::vector<double> ramp;
 
   times.emplace_back(temp);
-  ramp.emplace_back(getRamp(temp));
+  ramp.emplace_back(getRamp(temp,T));
   while (T-temp > 1e-6) {
     temp += dt;
     times.emplace_back(temp);
-    ramp.emplace_back(getRamp(temp));
+    ramp.emplace_back(getRamp(temp,T));
   }
 
   auto anal   = opt.getAnalyticGradientTest(ramp,dt,args);
