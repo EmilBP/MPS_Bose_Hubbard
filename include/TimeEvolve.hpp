@@ -388,7 +388,7 @@ TimeEvolveMixed(const Iterable& gatelist,
 template <class Iterable, class Tensor>
 std::vector<IQMPS>
 mixedTEvolve2(Iterable const& gatelist,
-          std::vector< IQTensor > const& expUlist,
+          std::vector< std::vector<IQTensor> > const& expUlist,
           Real ttotal,
           Real tstep,
           MPSt<Tensor>& psi,
@@ -442,7 +442,7 @@ mixedTEvolve2(Iterable const& gatelist,
               if(ni1 >= i2)
                   {
                   psi.svdBond(i1,AA,Fromleft,args);
-                  auto AU = psi.A(i1)*expUlist[i1-1];
+                  auto AU = psi.A(i1)*expUlist[tt-1][i1-1];
                   AU.mapprime(1,0,Site);
                   psi.setA(i1,AU);
                   psi.position(ni1); //does no work if position already ni1
@@ -455,8 +455,8 @@ mixedTEvolve2(Iterable const& gatelist,
               if(ni1 < i2 && forward) {
                 forward = false;
                 psi.svdBond(i1,AA,Fromright,args);
-                auto AU1 = psi.A(i1)*expUlist[i1-1];
-                auto AU2 = psi.A(i2)*expUlist[i2-1];
+                auto AU1 = psi.A(i1)*expUlist[tt-1][i1-1];
+                auto AU2 = psi.A(i2)*expUlist[tt-1][i2-1];
                 AU1.mapprime(1,0,Site);
                 AU2.mapprime(1,0,Site);
                 psi.setA(i1,AU1);
@@ -496,7 +496,7 @@ mixedTEvolve2(Iterable const& gatelist,
 template <class Iterable, class Tensor>
 inline std::vector<IQMPS>
 TimeEvolveMixed2(const Iterable& gatelist,
-          const std::vector<IQTensor>& expUlist,
+          const std::vector< std::vector<IQTensor> >& expUlist,
           Real ttotal,
           Real tstep,
           MPSt<Tensor>& psi,
@@ -509,7 +509,7 @@ TimeEvolveMixed2(const Iterable& gatelist,
 template <class Iterable, class Tensor>
 std::vector<IQMPS>
 mixedTEvolve3(Iterable const& gatelist,
-          MPOt<IQTensor> const& expUlist,
+          std::vector< MPOt<IQTensor> > const& expUlist,
           Real ttotal,
           Real tstep,
           MPSt<Tensor>& psi,
@@ -557,7 +557,7 @@ mixedTEvolve3(Iterable const& gatelist,
               if(ni1 >= i2)
                   {
                   psi.svdBond(i1,AA,Fromleft,args);
-                  auto AU = psi.A(i1)*expUlist.A(i1);
+                  auto AU = psi.A(i1)*(expUlist[tt-1]).A(i1);
                   AU.mapprime(1,0,Site);
                   psi.setA(i1,AU);
                   psi.position(ni1); //does no work if position already ni1
@@ -571,8 +571,8 @@ mixedTEvolve3(Iterable const& gatelist,
                   {
                   forward = false;
                   psi.svdBond(i1,AA,Fromright,args);
-                  auto AU1 = psi.A(i1)*expUlist.A(i1);
-                  auto AU2 = psi.A(i2)*expUlist.A(i2);
+                  auto AU1 = psi.A(i1)*(expUlist[tt-1]).A(i1);
+                  auto AU2 = psi.A(i2)*(expUlist[tt-1]).A(i2);
                   AU1.mapprime(1,0,Site);
                   AU2.mapprime(1,0,Site);
                   psi.setA(i1,AU1);
@@ -612,7 +612,7 @@ mixedTEvolve3(Iterable const& gatelist,
 template <class Iterable, class Tensor>
 inline std::vector<IQMPS>
 TimeEvolveMixed3(const Iterable& gatelist,
-          const MPOt<IQTensor>& expUlist,
+          const std::vector< MPOt<IQTensor> >& expUlist,
           Real ttotal,
           Real tstep,
           MPSt<Tensor>& psi,
