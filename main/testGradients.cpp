@@ -33,7 +33,7 @@ int main(){
 
   auto args   = Args("Cutoff=",1E-8,"Maxm=",200);
   double eps  = 1e-6;
-  double dt   = 1e-4;
+  double dt   = 1e-2;
   double T    = 1;
   double temp = 0;
 

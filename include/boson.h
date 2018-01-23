@@ -133,7 +133,7 @@ class BosonSite {
 	      }
 	    }
         else
-	if(opname == "I")
+	if(opname == "Id")
 	    {
 	      for (size_t j = 1; j<= d; j++) {
 		  Op.set(indices.at(j),indicesP.at(j),1);
