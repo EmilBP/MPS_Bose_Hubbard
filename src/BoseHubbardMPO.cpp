@@ -1,34 +1,50 @@
 #include "BoseHubbardMPO.h"
 
-BoseHubbardMPO::BoseHubbardMPO(SiteSet& sites, double trapStr)
-  : baseMPO(AutoMPO(sites)), N(sites.N()), trapStr(trapStr), L(sites.N()) {
+BoseHubbardMPO::BoseHubbardMPO(SiteSet& sites, double overlayTrapDepth)
+  : baseMPO(AutoMPO(sites)), N(sites.N()), overlayTrapDepth(overlayTrapDepth), L(sites.N()) {
 
+  hasData = false;
 }
 
-double BoseHubbardMPO::getJ(double V0){
-  // in units of E_rec
-  return 4.0/sqrt(M_PI)*pow(V0,0.75)*exp(-2.0*sqrt(V0));
+void BoseHubbardMPO::interpolateData(double V0, double& U, double& J, double& dUdV, double& dJdV){
+  size_t index = 0;
+
+  if (V0 < UJdata[0][0] || V0 > UJdata[UJdata.size()-1][0]) {
+    std::cout << "Error: V0 not within data!" << '\n';
+    return;
+  }
+
+  while(UJdata[index][0] < V0 && index < UJdata.size()) {
+    index++;
+  }
+
+  dUdV   = (UJdata[index][1]-UJdata[index-1][1])/(UJdata[index][0]-UJdata[index-1][0]);
+  dJdV   = (UJdata[index][2]-UJdata[index-1][2])/(UJdata[index][0]-UJdata[index-1][0]);
+  U      = UJdata[index-1][1] + dUdV*(V0-UJdata[index-1][0]);
+  J      = UJdata[index-1][2] + dJdV*(V0-UJdata[index-1][0]);
 }
 
-double BoseHubbardMPO::getU(double V0){
-  // in units of E_rec
-  double ka = 1;
-  return sqrt(8.0/M_PI)*ka*pow(V0,0.75);
-}
+void BoseHubbardMPO::loadUJdata(std::string& filename){
+  UJdata.clear();
+  std::ifstream ifs(filename);
+  std::string tempstr;
+  double var1, var2, var3;
 
-double BoseHubbardMPO::getdJdV(double V0){
-  return exp(-2.0*sqrt(V0)) * (1.69257 - 2.25676*sqrt(V0))*pow(V0,-0.25);
-}
-
-double BoseHubbardMPO::getdUdV(double V0){
-  double ka = 1;
-  return (1.19683*ka)*pow(V0,-0.25);
+  while (std::getline(ifs, tempstr)) {
+    std::istringstream iss(tempstr);
+    std::vector<double> tempv;
+    while (iss >> var1 >> var2 >> var3) {
+      tempv = {var1 , var2, var3};
+    }
+    UJdata.push_back(tempv); // row based
+  }
+  hasData = true;
 }
 
 AutoMPO BoseHubbardMPO::updateMPO(double control){
   AutoMPO ampo  = baseMPO;
-  double J      = getJ(control);
-  double U      = getU(control);
+  double U, J, dU, dJ;
+  interpolateData(control,U,J,dU,dJ);
 
   for(int i = 1; i < N; ++i) {
     ampo += -J,"A",i,"Adag",i+1;
@@ -36,7 +52,7 @@ AutoMPO BoseHubbardMPO::updateMPO(double control){
   }
   for (int i = 1; i <= N; ++i) {
     ampo += U/2.0,"N(N-1)",i;
-    ampo += 0.5*trapStr*(i-0.5*(L-1))*(i-0.5*(L-1)),"N",i;
+    ampo += overlayTrapDepth*(i-0.5*(L-1))*(i-0.5*(L-1)),"N",i;
   }
 
   return ampo;
@@ -44,8 +60,8 @@ AutoMPO BoseHubbardMPO::updateMPO(double control){
 
 AutoMPO BoseHubbardMPO::dHdu(double control){
   AutoMPO ampo = baseMPO;
-  double dJdV  = getdJdV(control);
-  double dUdV  = getdUdV(control);
+  double U, J, dUdV, dJdV;
+  interpolateData(control,U,J,dUdV,dJdV);
 
   for(int i = 1; i < N; ++i) {
     ampo += -dJdV,"A",i,"Adag",i+1;

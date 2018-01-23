@@ -3,8 +3,6 @@
 OptimalControl::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, autoMPOstrategy& MPOstrat, double gamma)
   : psi_target(psi_target), psi_init(psi_init), MPOstrat(MPOstrat), gamma(gamma){
 
-  std::vector<double> v;
-  std::cout << getCost(psi_init,v) << std::endl;
 }
 
 double OptimalControl::getCost(IQMPS& psi, std::vector<double>& control){
@@ -31,9 +29,8 @@ std::vector<double> OptimalControl::getAnalyticGradient(std::vector<double>& con
   auto i1 = begin(chi_t), i2 = begin(psi_t);
   auto i3 = begin(control), e = end(control);
 
-
   while (i3 != e) {
-    g.emplace_back(dt* overlapC(*i1,IQMPO(MPOstrat.dHdu(*i3)),*i2).real() );
+    g.emplace_back(dt*overlapC(*i1,IQMPO(MPOstrat.dHdu(*i3)),*i2).real() );
     ++i1;
     ++i2;
     ++i3;
