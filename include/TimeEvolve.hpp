@@ -447,7 +447,12 @@ mixedTEvolve2(Iterable const& gatelist,
                   psi.setA(i1,AU);
                   psi.position(ni1); //does no work if position already ni1
                   }
-              if (ni1 < i2 && forward) {
+              if(ni1 < i2 && !forward)
+                  {
+                  psi.svdBond(i1,AA,Fromright,args);
+                  psi.position(ni2); //does no work if position already ni2
+                  }
+              if(ni1 < i2 && forward) {
                 forward = false;
                 psi.svdBond(i1,AA,Fromright,args);
                 auto AU1 = psi.A(i1)*expUlist[i1-1];
@@ -457,13 +462,7 @@ mixedTEvolve2(Iterable const& gatelist,
                 psi.setA(i1,AU1);
                 psi.setA(i2,AU2);
                 psi.position(ni2); //does no work if position already ni2
-
                 }
-              if (ni1 < i2)
-                  {
-                  psi.svdBond(i1,AA,Fromright,args);
-                  psi.position(ni2); //does no work if position already ni2
-                  }
               }
           else
               {
