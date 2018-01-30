@@ -10,9 +10,8 @@ private:
   double tstep, J;
   std::vector< BondGate<IQTensor> > JGates;
   std::vector<IQTensor> UGates;
-  Args args;
-
   SiteSet sites;
+  Args args;
 
   void initJGates(const double J);
   void initUGates(const double U);

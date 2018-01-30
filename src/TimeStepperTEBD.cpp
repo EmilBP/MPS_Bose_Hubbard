@@ -34,23 +34,19 @@ void TimeStepperTEBD::setTstep(const double tstep_){
 
 void TimeStepperTEBD::initUGates(const double U){
   UGates.clear();
-  for (int i = 1; i <= sites.N(); ++i) {
-    IQTensor hterm = -0.5*U*tstep*Cplx_i*sites.op("N(N-1)",i);
-    IQTensor Id    = sites.op("Id",i);
 
-    IQTensor term = hterm;
-    hterm.mapprime(1,2);
-    hterm.mapprime(0,1);
-    IQTensor gate_;
+  for (int k = 1; k <= sites.N(); ++k) {
+    auto s    = sites.si(k);
+    auto sP   = prime(s);
+    int HD    = s.nblock();
 
-    for(int ord = 10; ord >= 1; --ord)
-        {
-        term /= ord;
-        gate_ = Id + term;
-        term = gate_ * hterm;
-        term.mapprime(2,1);
-        }
-    UGates.push_back(gate_);
+    IQTensor T(dag(s),sP);
+
+    for (size_t i = 0; i < HD; i++) {
+      T.set(s(i+1),sP(i+1), std::exp( -0.5*U*tstep*Cplx_i*i*(i-1) ) );
+    }
+
+    UGates.push_back(T);
   }
 }
 
