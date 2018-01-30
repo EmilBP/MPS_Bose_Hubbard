@@ -35,7 +35,7 @@ void TimeStepperTEBD::setTstep(const double tstep_){
 void TimeStepperTEBD::initUGates(const double U){
   UGates.clear();
   for (int i = 1; i <= sites.N(); ++i) {
-    IQTensor hterm = -U*tstep*Cplx_i*sites.op("N(N-1)",i);
+    IQTensor hterm = -0.5*U*tstep*Cplx_i*sites.op("N(N-1)",i);
     IQTensor Id    = sites.op("Id",i);
 
     IQTensor term = hterm;

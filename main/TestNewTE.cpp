@@ -21,7 +21,14 @@ int main(){
   auto psi_i  = SetupSuperfluid(sites,Npart);
   auto psi_f  = SetupMottInsulator(sites,Npart);
   auto TEBD   = TimeStepperTEBD(sites,1.0,1e-2,{"Cutoff=",1E-8});
-  OptimalControl<TimeStepperTEBD> OC(psi_f,psi_i,TEBD, 0.1 , 1e-2);
+
+  auto ampo = AutoMPO(sites);
+  for(int i = 1; i <= N; ++i) {
+    ampo += 0.5,"N(N-1)",i;
+  }
+  auto dHdU = IQMPO(ampo);
+
+  OptimalControl<TimeStepperTEBD> OC(psi_f,psi_i,TEBD,dHdU, 0.1 , 1e-3);
 
   //
   //  setup parameters

@@ -2,13 +2,13 @@
 #include "TimeStepperTEBD.hpp"
 
 template<class TimeStepper>
-OptimalControl<TimeStepper>::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, double gamma, double tstep)
-  : psi_target(psi_target), psi_init(psi_init), gamma(gamma), tstep(tstep), timeStepper(timeStepper) {
+OptimalControl<TimeStepper>::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, MPOt<IQTensor>& dHdU, double gamma, double tstep)
+  : psi_target(psi_target), psi_init(psi_init), gamma(gamma), tstep(tstep), timeStepper(timeStepper), dHdU(dHdU) {
 
 }
 
 template<class TimeStepper>
-double OptimalControl<TimeStepper>::getFidelity(const std::vector<double>& control){
+double OptimalControl<TimeStepper>::getFidelity(vec& control){
   auto psi0 = psi_init;
 
   for (size_t i = 0; i < control.size()-1; i++) {
@@ -21,7 +21,7 @@ double OptimalControl<TimeStepper>::getFidelity(const std::vector<double>& contr
 }
 
 template<class TimeStepper>
-double OptimalControl<TimeStepper>::getRegularisation(const std::vector<double>& control){
+double OptimalControl<TimeStepper>::getRegularisation(vec& control){
 
   double tmp = 0;
   for (size_t i = 0; i < control.size()-1; i++) {
@@ -34,14 +34,40 @@ double OptimalControl<TimeStepper>::getRegularisation(const std::vector<double>&
 }
 
 template<class TimeStepper>
-double OptimalControl<TimeStepper>::getCost(const std::vector<double>& control){
-  return getRegularisation(control);
+double OptimalControl<TimeStepper>::getCost(vec& control){
 
-  // return 0.5*(1-getFidelity(control)) + getRegularisation(control);
+  return 0.5*(1-getFidelity(control)) + getRegularisation(control);
 }
 
 template<class TimeStepper>
-std::vector<double> OptimalControl<TimeStepper>::getRegGrad(const std::vector<double>& control){
+void OptimalControl<TimeStepper>::calcPsi(vec& control){
+  auto psi0 = psi_init;
+  psi_t.clear();
+  psi_t.push_back(psi0);
+
+  for (size_t i = 0; i < control.size()-1; i++) {
+    timeStepper.step(psi0,control.at(i),control.at(i+1));
+    psi_t.push_back(psi0);
+  }
+}
+
+template<class TimeStepper>
+void OptimalControl<TimeStepper>::calcChi(vec& control){
+  auto chiT = psi_target;
+  // auto chiT = -Cplx_i * psi_target*overlapC(psi_target,psi_t.back());
+  chi_t.clear();
+  chi_t.push_back(chiT);
+
+  for (size_t i = control.size()-1; i > 0; i--) {
+    timeStepper.step(chiT,control.at(i),control.at(i-1));
+    chi_t.push_back(chiT);
+  }
+
+  std::reverse(chi_t.begin(),chi_t.end());
+}
+
+template<class TimeStepper>
+std::vector<double> OptimalControl<TimeStepper>::getRegGrad(vec& control){
   std::vector<double> del;
   del.reserve(control.size());
 
@@ -59,30 +85,36 @@ std::vector<double> OptimalControl<TimeStepper>::getRegGrad(const std::vector<do
 }
 
 template<class TimeStepper>
-std::vector<double> OptimalControl<TimeStepper>::getFidelityGrad(const std::vector<double>& control){
+std::vector<double> OptimalControl<TimeStepper>::getFidelityGrad(vec& control){
   std::vector<double> g;
-  // g.reserve(control.size());
-  //
-  // auto i1 = begin(chi_t), i2 = begin(psi_t);
-  // auto i3 = begin(control), e = end(control);
-  //
-  // while (i3 != e) {
-  //   g.emplace_back(tstep*overlapC(*i1,IQMPO(MPOstrat.dHdu(*i3)),*i2).real() );
-  //   ++i1;
-  //   ++i2;
-  //   ++i3;
-  // }
+  g.reserve(control.size());
+
+  calcPsi(control);
+  calcChi(control);
+
+  for (size_t i = 0; i < control.size(); i++) {
+    g.push_back(-tstep*overlapC(chi_t.at(i),dHdU,psi_t.at(i)).real() );
+  }
+
   return g;
 }
 
 template<class TimeStepper>
-std::vector<double> OptimalControl<TimeStepper>::getAnalyticGradient(const std::vector<double>& control){
-  return getRegGrad(control);
+std::vector<double> OptimalControl<TimeStepper>::getAnalyticGradient(vec& control){
+
+  auto FGrad = getFidelityGrad(control);
+  auto RGrad = getRegGrad(control);
+
+  for (size_t i = 0; i < FGrad.size(); i++) {
+    FGrad.at(i) += RGrad.at(i);
+  }
+  return FGrad;
+  // return getFidelityGrad(control) + getRegGrad(control);
 }
 
 
 template<class TimeStepper>
-std::vector<double> OptimalControl<TimeStepper>::getNumericGradient(const std::vector<double>& control){
+std::vector<double> OptimalControl<TimeStepper>::getNumericGradient(vec& control){
 
   auto newControl = control;
   double Jp, Jm;
@@ -106,41 +138,3 @@ std::vector<double> OptimalControl<TimeStepper>::getNumericGradient(const std::v
 }
 
 template class OptimalControl<TimeStepperTEBD>;
-//
-// std::vector<double> OptimalControl::getAnalyticGradientTest(std::vector<double>& control, double dt, const Args& args){
-//   auto ampo = updateHamiltonian(control);
-//   psi_t = TimeEvolve(psi_init, ampo, dt*Cplx_i, args);
-//   auto chi_T = -Cplx_i * psi_target*overlapC(psi_target,psi_t.back());
-//   chi_t = TimeEvolveBack(chi_T, ampo, dt*Cplx_i, args);
-//
-//   return getAnalyticGradient(control,dt);
-// }
-//
-// std::vector<double> OptimalControl::getNumericGradient(
-//       std::vector<double>& control, double epsilon,
-//       double dt, const Args& args)
-// {
-//   double Jp, Jm;
-//   std::vector<double> g;
-//   std::vector<IQMPS> psi_temp;
-//   std::vector<AutoMPO> tempMPO;
-//   g.reserve(control.size());
-//
-//   for (auto& ui : control){
-//     ui        += epsilon;
-//     tempMPO    = updateHamiltonian(control);
-//     psi_temp   = TimeEvolve(psi_init,tempMPO,dt*Cplx_i,args);
-//     Jp         = getCost(psi_temp.back(),control);
-//
-//     ui        -= 2*epsilon;
-//     tempMPO    = updateHamiltonian(control);
-//     psi_temp   = TimeEvolve(psi_init,tempMPO,dt*Cplx_i,args);
-//     Jm         = getCost(psi_temp.back(),control);
-//
-//     ui += epsilon;
-//
-//     g.emplace_back((Jp-Jm)/(2.0*epsilon));
-//   }
-//
-//   return g;
-// }
