@@ -12,26 +12,30 @@
 
 using namespace itensor;
 
+template<class TimeStepper>
 class OptimalControl{
 private:
-  double gamma;
+  double gamma, tstep;
   IQMPS psi_target, psi_init;
-  autoMPOstrategy& MPOstrat;
+  TimeStepper timeStepper;
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
 
-  double getCost(IQMPS& psi, std::vector<double>& control);
-  std::vector<AutoMPO> updateHamiltonian(std::vector<double>& control);
-  std::vector<double> updateControl(std::vector<double>& gradient);
+  // void initGates();
+  double getFidelity(const std::vector<double>& control);
+  double getRegularisation(const std::vector<double>& control);
+  std::vector<double> getRegGrad(const std::vector<double>& control);
+  std::vector<double> getFidelityGrad(const std::vector<double>& control);
+
 
 public:
-  OptimalControl(IQMPS& psi_target, IQMPS& psi_init, autoMPOstrategy& MPOstrat, double gamma);
-  std::vector<double> Optimize(std::vector<double>& control_init, double dt, size_t maxeval, const Args& args);
+  OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, double gamma, double tstep);
 
-  std::vector<double> getAnalyticGradient(std::vector<double>& control,double dt);
-  std::vector<double> getAnalyticGradientTest(std::vector<double>& control,double dt,const Args& args);
-  std::vector<double> getNumericGradient(std::vector<double>& control,double epsilon, double dt, const Args& args);
+  double getCost(const std::vector<double>& control);
+  std::vector<double> getAnalyticGradient(const std::vector<double>& control);
+  std::vector<double> getNumericGradient(const std::vector<double>& control);
+  // std::vector<double> getAnalyticGradientTest(std::vector<double>& control,const Args& args);
 };
 
 #endif
