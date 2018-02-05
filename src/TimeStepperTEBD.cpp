@@ -8,28 +8,39 @@ TimeStepperTEBD::TimeStepperTEBD(const SiteSet& sites, const double J, const dou
 void TimeStepperTEBD::initJGates(const double J){
   using Gate = BondGate<IQTensor>;
 
-  JGates.clear();
+  JGates_forwards.clear();
+  JGates_backwards.clear();
+
   for(int i = 1; i < sites.N(); ++i)
       {
       auto hterm = -J*sites.op("A",i)*sites.op("Adag",i+1);
       hterm += -J*sites.op("Adag",i)*sites.op("A",i+1);
 
-      auto g = Gate(sites,i,i+1,Gate::tReal,tstep/2.,hterm);
-      JGates.push_back(g);
+      auto gf = Gate(sites,i,i+1,Gate::tReal,tstep/2.,hterm);
+      auto gb = Gate(sites,i,i+1,Gate::tReal,-tstep/2.,hterm);
+      JGates_forwards.push_back(gf);
+      JGates_backwards.push_back(gb);
       }
   for(int i = sites.N()-1; i >= 1; --i)
       {
       auto hterm = -J*sites.op("A",i)*sites.op("Adag",i+1);
       hterm += -J*sites.op("Adag",i)*sites.op("A",i+1);
 
-      auto g = Gate(sites,i,i+1,Gate::tReal,tstep/2.,hterm);
-      JGates.push_back(g);
+      auto gf = Gate(sites,i,i+1,Gate::tReal,tstep/2.,hterm);
+      auto gb = Gate(sites,i,i+1,Gate::tReal,-tstep/2.,hterm);
+      JGates_forwards.push_back(gf);
+      JGates_backwards.push_back(gb);
       }
 }
+
 
 void TimeStepperTEBD::setTstep(const double tstep_){
   tstep = tstep_;
   initJGates(J);
+}
+
+double TimeStepperTEBD::getTstep(){
+  return tstep;
 }
 
 void TimeStepperTEBD::initUGates(const double U){
@@ -50,10 +61,20 @@ void TimeStepperTEBD::initUGates(const double U){
   }
 }
 
-void TimeStepperTEBD::step(IQMPS& psi, const double from, const double to){
+void TimeStepperTEBD::step(IQMPS& psi, const double from, const double to, const bool propagateForward){
   double U = 0.5*(from+to);
-  initUGates(U);
 
+  if (propagateForward) {
+    initUGates(U);
+    doStep(psi, JGates_forwards, UGates);
+  }
+  else {
+    initUGates(-U);
+    doStep(psi, JGates_backwards, UGates);
+  }
+}
+
+void TimeStepperTEBD::doStep(IQMPS& psi, const GateList& JGates, const std::vector<IQTensor> UGates){
   const bool normalize = args.getBool("Normalize",true);
   auto g = JGates.begin();
   bool forward = true;

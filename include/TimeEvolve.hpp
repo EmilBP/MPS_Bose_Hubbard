@@ -193,5 +193,130 @@ TimeEvolve(const Iterable& gatelist,
 
 
 
+
+template <class Iterable, class Tensor>
+std::vector<IQMPS>
+mixedTEvolveTest(Iterable const& gatelist,
+          std::vector< std::vector<IQTensor> > const& expUlist,
+          Real ttotal,
+          Real tstep,
+          MPSt<Tensor>& psi,
+          Observer& obs,
+          Args args)
+{
+  const bool verbose = args.getBool("Verbose",false);
+  const bool normalize = args.getBool("Normalize",true);
+
+  const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
+  if(fabs(nt*tstep-ttotal) > 1E-9)
+      {
+      Error("Timestep not commensurate with total time");
+      }
+
+  std::vector<IQMPS> psi_t;
+  psi_t.reserve(nt+1);
+  Real tsofar = 0;
+  Real tot_norm = psi.normalize();
+  psi_t.push_back(psi);
+  if(verbose)
+      {
+      printfln("Taking %d steps of timestep %.5f, total time %.5f",nt,tstep,ttotal);
+      }
+  psi.position(gatelist.front().i1());
+  for(int tt = 1; tt <= nt; ++tt)
+      {
+      auto g = gatelist.begin();
+      bool forward = true;
+      while(g != gatelist.end())
+          {
+          auto i1 = g->i1();
+          auto i2 = g->i2();
+          auto AA = psi.A(i1)*psi.A(i2)*g->gate();
+          AA.mapprime(1,0,Site);
+
+          ++g;
+          if(g != gatelist.end())
+              {
+              //Look ahead to next gate position
+              auto ni1 = g->i1();
+              auto ni2 = g->i2();
+              //SVD AA to restore MPS form
+              //before applying current gate
+              if(ni1 >= i2)
+                  {
+                  // psi.svdBond(i1,AA,Fromleft,args);
+                  // auto AU = psi.A(i1)*expUlist[tt-1][i1-1];
+                  // AU.mapprime(1,0,Site);
+                  // psi.setA(i1,AU);
+                  IQTensor A,B;
+                  denmatDecomp(AA,A,B,Fromleft,args);
+
+                  auto AU = A*expUlist[tt-1][i1-1];
+                  AU.mapprime(1,0,Site);
+                  B.mapprime(1,0,Site);
+                  psi.setA(i1,AU);
+                  psi.setA(i2,B);
+
+                  psi.position(ni1); //does no work if position already ni1
+                  }
+              if(ni1 < i2 && !forward)
+                  {
+                  psi.svdBond(i1,AA,Fromright,args);
+                  psi.position(ni2); //does no work if position already ni2
+                  }
+              if(ni1 < i2 && forward) {
+                forward = false;
+                psi.svdBond(i1,AA,Fromright,args);
+                auto AU1 = psi.A(i1)*expUlist[tt-1][i1-1];
+                auto AU2 = psi.A(i2)*expUlist[tt-1][i2-1];
+                AU1.mapprime(1,0,Site);
+                AU2.mapprime(1,0,Site);
+                psi.setA(i1,AU1);
+                psi.setA(i2,AU2);
+                psi.position(ni2); //does no work if position already ni2
+                }
+              }
+          else
+              {
+              //No next gate to analyze, just restore MPS form
+              psi.svdBond(i1,AA,Fromright,args);
+              }
+          }
+
+      if(normalize)
+          {
+          tot_norm *= psi.normalize();
+          }
+
+      psi_t.push_back(psi);
+      tsofar += tstep;
+
+      args.add("TimeStepNum",tt);
+      args.add("Time",tsofar);
+      args.add("TotalTime",ttotal);
+      obs.measure(args);
+      }
+  if(verbose)
+      {
+      printfln("\nTotal time evolved = %.5f\n",tsofar);
+      }
+
+  return psi_t;
+
+}
+
+template <class Iterable, class Tensor>
+inline std::vector<IQMPS>
+TimeEvolveTest(const Iterable& gatelist,
+          const std::vector< std::vector<IQTensor> >& expUlist,
+          Real ttotal,
+          Real tstep,
+          MPSt<Tensor>& psi,
+          const Args& args)
+    {
+    TEvolObserver obs(args);
+    return mixedTEvolveTest(gatelist,expUlist,ttotal,tstep,psi,obs,args);
+}
+
 } // end namespace
 #endif

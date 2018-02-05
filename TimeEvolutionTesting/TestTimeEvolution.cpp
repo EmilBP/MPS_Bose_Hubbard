@@ -16,7 +16,7 @@ using std::vector;
 int main() {
   int N = 15;
   int Npart = 15;
-  int HilbertDim = 12;
+  int HilbertDim = 10;
   Real tstep = 1e-3; //time step (smaller is generally more accurate)
   Real ttotal = 1.0; //total time to evolve
   Real cutoff = 1E-8; //truncation error cutoff when restoring MPS form
@@ -105,10 +105,10 @@ int main() {
     expUtensor.push_back(tmplist);
   }
   clock_t end1  = clock();
-  // clock_t begin2= clock();
+  clock_t begin2= clock();
   // auto psi1     = psi0;
-  // auto psi_t1   = TimeEvolve(gatelist,expUtensor,ttotal,tstep,psi1,{"Cutoff=",cutoff,"Verbose=",true});
-  // clock_t end2  = clock();
+  // auto psi_t1   = TimeEvolveTest(gatelist,expUtensor,ttotal,tstep,psi1,{"Cutoff=",cutoff,"Verbose=",true});
+  clock_t end2  = clock();
   std::cout << "Building tensor expansion = " <<  double(end1 - begin1) / CLOCKS_PER_SEC << "\n";
   // std::cout << "Time Evolution for TEBD + tensor = " <<  double(end2 - begin2) / CLOCKS_PER_SEC << "\n";
 
@@ -163,45 +163,13 @@ int main() {
 
 
   end1          = clock();
-  // begin2        = clock();
+  begin2        = clock();
   // auto psi2     = psi0;
   // auto psi_t2   = TimeEvolve(gatelist,expUtensor2,ttotal,tstep,psi2,{"Cutoff=",cutoff,"Verbose=",true});
-  // end2          = clock();
+  end2          = clock();
   std::cout << "Building custom tensor = " <<  double(end1 - begin1) / CLOCKS_PER_SEC << "\n";
   // std::cout << "Time Evolution for TEBD + tensor = " <<  double(end2 - begin2) / CLOCKS_PER_SEC << "\n";
 
-
-  begin1 = clock();
-  tensorlist expUtensor3;
-  for (size_t j = 0; j < ttotal/tstep; j++) {
-    double U  = (1.0+4.0*tstep*j);
-    auto tmplist = std::vector<IQTensor>();
-
-
-    for (int k = 1; k <= N; ++k) {
-      auto s  = sites.si(k);
-      auto sP = prime(s);
-
-      std::vector<IQIndexVal> indices(HilbertDim+1);
-      std::vector<IQIndexVal> indicesP(HilbertDim+1);
-      for (size_t i = 0; i <= HilbertDim; i++) {
-        indices.at(i) = s(i+1);
-        indicesP.at(i) = sP(i+1);
-      }
-
-      IQTensor T(dag(s),sP);
-
-      for (size_t i = 0; i <= HilbertDim; i++) {
-          T.set(indices.at(i),indicesP.at(i), std::exp( -0.5*U*tstep*Cplx_i*i*(i-1) ) );
-      }
-
-      tmplist.push_back(T);
-    }
-
-    expUtensor3.push_back(tmplist);
-  }
-  end1          = clock();
-  std::cout << "Building custom tensor = " <<  double(end1 - begin1) / CLOCKS_PER_SEC << "\n";
 
   //
   //  POST ANALYSIS
