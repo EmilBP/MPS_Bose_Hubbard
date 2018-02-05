@@ -2,7 +2,6 @@
 #include "boson.h"
 #include "OptimalControl.hpp"
 #include "InitializeState.hpp"
-#include "BoseHubbardMPO.h"
 #include <math.h>
 
 using namespace itensor;

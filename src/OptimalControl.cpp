@@ -1,14 +1,15 @@
 #include "OptimalControl.hpp"
 #include "TimeStepperTEBD.hpp"
+#include "HamiltonianBH.hpp"
 
-template<class TimeStepper>
-OptimalControl<TimeStepper>::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, MPOt<IQTensor>& dHdU, double gamma)
-  : psi_target(psi_target), psi_init(psi_init), gamma(gamma), timeStepper(timeStepper), tstep(timeStepper.getTstep()), dHdU(dHdU) {
+template<class TimeStepper, class Hamiltonian>
+OptimalControl<TimeStepper,Hamiltonian>::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, Hamiltonian& hamil, double gamma)
+  : psi_target(psi_target), psi_init(psi_init), gamma(gamma), timeStepper(timeStepper), hamil(hamil), tstep(timeStepper.getTstep()) {
 
 }
 
-template<class TimeStepper>
-double OptimalControl<TimeStepper>::getFidelity(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+double OptimalControl<TimeStepper,Hamiltonian>::getFidelity(const vec& control){
   auto psi0 = psi_init;
 
   for (size_t i = 0; i < control.size()-1; i++) {
@@ -20,8 +21,8 @@ double OptimalControl<TimeStepper>::getFidelity(const vec& control){
   return (re*re+im*im);
 }
 
-template<class TimeStepper>
-double OptimalControl<TimeStepper>::getRegularisation(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+double OptimalControl<TimeStepper,Hamiltonian>::getRegularisation(const vec& control){
 
   double tmp = 0;
   for (size_t i = 0; i < control.size()-1; i++) {
@@ -33,14 +34,14 @@ double OptimalControl<TimeStepper>::getRegularisation(const vec& control){
   return gamma/2.0*tmp;
 }
 
-template<class TimeStepper>
-double OptimalControl<TimeStepper>::getCost(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+double OptimalControl<TimeStepper,Hamiltonian>::getCost(const vec& control){
 
   return 0.5*(1-getFidelity(control)) + getRegularisation(control);
 }
 
-template<class TimeStepper>
-void OptimalControl<TimeStepper>::calcPsi(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+void OptimalControl<TimeStepper,Hamiltonian>::calcPsi(const vec& control){
 
   const bool propagateForward = true;
   auto psi0 = psi_init;
@@ -53,8 +54,8 @@ void OptimalControl<TimeStepper>::calcPsi(const vec& control){
   }
 }
 
-template<class TimeStepper>
-void OptimalControl<TimeStepper>::calcChi(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+void OptimalControl<TimeStepper,Hamiltonian>::calcChi(const vec& control){
 
   const bool propagateForward = false;
   auto chiT = psi_target;
@@ -69,8 +70,8 @@ void OptimalControl<TimeStepper>::calcChi(const vec& control){
   std::reverse(chi_t.begin(),chi_t.end());
 }
 
-template<class TimeStepper>
-vecpair OptimalControl<TimeStepper>::getRegPlusRegGrad(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getRegPlusRegGrad(const vec& control){
 
   auto reg = getRegularisation(control);
   std::vector<double> del;
@@ -89,8 +90,8 @@ vecpair OptimalControl<TimeStepper>::getRegPlusRegGrad(const vec& control){
   return std::make_pair(reg,del);
 }
 
-template<class TimeStepper>
-vecpair OptimalControl<TimeStepper>::getFidelityPlusFidelityGrad(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getFidelityPlusFidelityGrad(const vec& control){
 
 
   std::vector<double> g;
@@ -102,7 +103,7 @@ vecpair OptimalControl<TimeStepper>::getFidelityPlusFidelityGrad(const vec& cont
   auto overlapFactor = overlapC(psi_target,psi_t.back());
 
   for (size_t i = 0; i < control.size(); i++) {
-    g.push_back( (overlapC( chi_t.at(i) , dHdU , psi_t.at(i) )*overlapFactor ).real() );
+    g.push_back( (overlapC( chi_t.at(i) , hamil.dHdU(control.at(i),tstep) , psi_t.at(i) )*overlapFactor ).real() );
   }
 
   double re, im;
@@ -112,8 +113,8 @@ vecpair OptimalControl<TimeStepper>::getFidelityPlusFidelityGrad(const vec& cont
   return std::make_pair(fidelity,g);
 }
 
-template<class TimeStepper>
-vecpair OptimalControl<TimeStepper>::getAnalyticGradient(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getAnalyticGradient(const vec& control){
 
   auto FGrad = getFidelityPlusFidelityGrad(control);
   auto RGrad = getRegPlusRegGrad(control);
@@ -129,8 +130,8 @@ vecpair OptimalControl<TimeStepper>::getAnalyticGradient(const vec& control){
 }
 
 
-template<class TimeStepper>
-vecpair OptimalControl<TimeStepper>::getNumericGradient(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getNumericGradient(const vec& control){
 
   auto newControl = control;
   double Jp, Jm;
@@ -158,8 +159,8 @@ vecpair OptimalControl<TimeStepper>::getNumericGradient(const vec& control){
   return std::make_pair(cost,g);
 }
 
-template<class TimeStepper>
-vec OptimalControl<TimeStepper>::checkFidelity(const vec& control){
+template<class TimeStepper, class Hamiltonian>
+vec OptimalControl<TimeStepper,Hamiltonian>::checkFidelity(const vec& control){
 
   std::vector<double> fid;
   fid.reserve(control.size());
@@ -176,4 +177,4 @@ vec OptimalControl<TimeStepper>::checkFidelity(const vec& control){
   return fid;
 }
 
-template class OptimalControl<TimeStepperTEBD>;
+template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;

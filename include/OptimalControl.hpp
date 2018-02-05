@@ -12,13 +12,13 @@ using namespace itensor;
 using vec = std::vector<double>;
 using vecpair = std::pair<double, vec>;
 
-template<class TimeStepper>
+template<class TimeStepper, class Hamiltonian>
 class OptimalControl{
 private:
   TimeStepper timeStepper;
+  Hamiltonian hamil;
   double gamma, tstep;
   IQMPS psi_target, psi_init;
-  MPOt<IQTensor> dHdU;
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
@@ -30,9 +30,8 @@ private:
   void calcPsi(const vec& control);
   void calcChi(const vec& control);
 
-
 public:
-  OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, MPOt<IQTensor>& dHdU, double gamma);
+  OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, Hamiltonian& hamil, double gamma);
 
   double getCost(const vec& control);
   vecpair getAnalyticGradient(const vec& control);
