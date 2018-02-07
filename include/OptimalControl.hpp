@@ -15,8 +15,8 @@ using vecpair = std::pair<double, vec>;
 template<class TimeStepper, class Hamiltonian>
 class OptimalControl{
 private:
-  TimeStepper timeStepper;
-  Hamiltonian hamil;
+  TimeStepper& timeStepper;
+  Hamiltonian& hamil;
   double gamma, tstep;
   IQMPS psi_target, psi_init;
 
@@ -37,7 +37,7 @@ public:
   vecpair getAnalyticGradient(const vec& control);
   vecpair getNumericGradient(const vec& control);
 
-  vec checkFidelity(const vec& control);
+  vecpair checkCostPlusFidelity(const vec& control);
 
 
 };

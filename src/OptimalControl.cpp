@@ -103,7 +103,7 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::getFidelityPlusFidelityGrad(con
   auto overlapFactor = overlapC(psi_target,psi_t.back());
 
   for (size_t i = 0; i < control.size(); i++) {
-    g.push_back( (overlapC( chi_t.at(i) , hamil.dHdU(control.at(i),tstep) , psi_t.at(i) )*overlapFactor ).real() );
+    g.push_back( (overlapC( chi_t.at(i) , hamil.dHdU(control.at(i)) , psi_t.at(i) )*overlapFactor ).real() );
   }
 
   double re, im;
@@ -160,7 +160,7 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::getNumericGradient(const vec& c
 }
 
 template<class TimeStepper, class Hamiltonian>
-vec OptimalControl<TimeStepper,Hamiltonian>::checkFidelity(const vec& control){
+vecpair OptimalControl<TimeStepper,Hamiltonian>::checkCostPlusFidelity(const vec& control){
 
   std::vector<double> fid;
   fid.reserve(control.size());
@@ -168,13 +168,16 @@ vec OptimalControl<TimeStepper,Hamiltonian>::checkFidelity(const vec& control){
   calcPsi(control);
   calcChi(control);
 
+  double re, im;
   for (size_t i = 0; i < control.size(); i++) {
-    double re, im;
-    overlap(psi_t.at(i),chi_t.at(i),re,im);
+    overlap(chi_t.at(i),psi_t.at(i),re,im);
     fid.push_back(re*re+im*im);
   }
 
-  return fid;
+  overlap(psi_target,psi_t.back(),re,im);
+  double cost = 0.5*(1-(re*re+im*im)) + getRegularisation(control);
+
+  return std::make_pair(cost,fid);
 }
 
 template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;
