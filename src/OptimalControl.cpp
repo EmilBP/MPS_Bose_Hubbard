@@ -1,5 +1,7 @@
 #include "OptimalControl.hpp"
 #include "TimeStepperTEBD.hpp"
+#include "TimeStepperTEBDfast.hpp"
+#include "TimeStepperTEBDnew.hpp"
 #include "HamiltonianBH.hpp"
 
 template<class TimeStepper, class Hamiltonian>
@@ -181,3 +183,5 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::checkCostPlusFidelity(const vec
 }
 
 template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;
+template class OptimalControl<TimeStepperTEBDfast,HamiltonianBH>;
+template class OptimalControl<TimeStepperTEBDnew,HamiltonianBH>;

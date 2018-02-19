@@ -2,10 +2,13 @@
 #include "boson.h"
 #include "HamiltonianBH.hpp"
 #include "TimeStepperTEBD.hpp"
+#include "TimeStepperTEBDfast.hpp"
+#include "TimeStepperTEBDnew.hpp"
 #include "InitializeState.hpp"
 #include "OptimalControl.hpp"
 #include <fstream>
 #include <string>
+#include <time.h>
 
 using namespace itensor;
 
@@ -119,13 +122,68 @@ matchGradients(       SiteSet& sites,
   auto times    = generateRange(0,tstep,T);
   auto control  = linspace(cstart,cend,times.size());
   auto Agrad    = OC.getAnalyticGradient(control);
-  auto Ngrad    = OC.getNumericGradient(control);
+  // auto Ngrad    = OC.getNumericGradient(control);
 
   for (size_t i = 0; i < Agrad.second.size(); i++) {
     std::vector<double> tmp;
     tmp.push_back(Agrad.second.at(i));
-    tmp.push_back(Ngrad.second.at(i));
-    tmp.push_back( abs(Agrad.second.at(i)-Ngrad.second.at(i)) );
+    // tmp.push_back(Ngrad.second.at(i));
+    // tmp.push_back( abs(Agrad.second.at(i)-Ngrad.second.at(i)) );
+
+    result.push_back(tmp);
+  }
+
+  return result;
+}
+
+matrix
+compareTEalgorithms( SiteSet& sites,
+                      IQMPS& psi_i,
+                      IQMPS& psi_f,
+                      std::vector<double>& tsteps,
+                      double cstart,
+                      double cend,
+                      double T,
+                      double J)
+{
+
+  matrix result;
+  auto H_BH     = HamiltonianBH(sites,J,0);
+
+  for (auto& dt : tsteps){
+
+    std::vector<double> tmp;
+    tmp.push_back(dt);
+
+    auto times    = generateRange(0,dt,T);
+    auto control  = linspace(cstart,cend,times.size());
+
+
+    auto TEBD1    = TimeStepperTEBDnew(sites,J,dt,{"Cutoff=",1E-8});
+    OptimalControl<TimeStepperTEBDnew,HamiltonianBH> OC1(psi_f,psi_i,TEBD1,H_BH, 0);
+    std::cout << "Re-ordered Time-Evolution Algorithm\n";
+    clock_t begin = clock();
+    auto CF       = OC1.checkCostPlusFidelity(control);
+    clock_t end   = clock();
+    std::cout << "Runtime = " <<  double(end - begin) / CLOCKS_PER_SEC << '\n';
+    double var    = calculateVariance(CF.second);
+    tmp.push_back(CF.first);
+    tmp.push_back(var);
+    tmp.push_back((end - begin) / CLOCKS_PER_SEC);
+
+
+    auto TEBD2    = TimeStepperTEBD(sites,J,dt,{"Cutoff=",1E-8});
+    OptimalControl<TimeStepperTEBD,HamiltonianBH> OC2(psi_f,psi_i,TEBD2,H_BH, 0);
+    std::cout << "Original Time-Evolution Algorithm\n";
+    begin         = clock();
+    CF            = OC2.checkCostPlusFidelity(control);
+    end           = clock();
+    std::cout << "Runtime = " <<  double(end - begin) / CLOCKS_PER_SEC << '\n';
+    var           = calculateVariance(CF.second);
+    tmp.push_back(CF.first);
+    tmp.push_back(var);
+    tmp.push_back((end - begin) / CLOCKS_PER_SEC);
+
 
     result.push_back(tmp);
   }
@@ -149,21 +207,25 @@ int main(){
   auto psi_i    = InitializeState(sites,Npart,J,cstart);
   auto psi_f    = InitializeState(sites,Npart,J,cend);
 
-  auto tsteps   = linspace(5e-5,5e-4,8);
-  auto data     = testCostPlusFidelity(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
-  saveData(data,"tstep_cost_varfidelity2.txt");
+  // auto tsteps   = linspace(5e-5,5e-4,8);
+  // auto data     = testCostPlusFidelity(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  // saveData(data,"tstep_cost_varfidelity2.txt");
 
-  // std::vector<double> tsteps;
-  // tsteps.push_back(1e-2);
-  //
-  //
-  // for (size_t order = 0; order <= 2; order++) {
-  //   for (auto& dt : tsteps){
-  //     auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
-  //     std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
-  //     saveData(data,name);
-  //   }
-  // }
+  std::vector<double> tsteps;
+  tsteps.push_back(1e-2);
+  tsteps.push_back(1e-3);
+
+  for (size_t order = 1; order <= 2; order++) {
+    for (auto& dt : tsteps){
+      auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
+      std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
+      saveData(data,name);
+    }
+  }
+
+  // auto tsteps  = linspace(1e-3,1e-2,10);
+  // auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  // saveData(data,"compareTEalgorithmsN15.txt");
 
 
   return 0;
