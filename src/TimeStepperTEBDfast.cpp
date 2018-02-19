@@ -8,28 +8,32 @@ TimeStepperTEBDfast::TimeStepperTEBDfast(const SiteSet& sites, const double J, c
 void TimeStepperTEBDfast::initJGates(const double J){
   using Gate = BondGate<IQTensor>;
 
-  JGates_forwards.clear();
-  JGates_backwards.clear();
+  JGates_tforwards.clear();
+  JGates_tbackwards.clear();
 
-  for(int i = 1; i < sites.N(); ++i)
+  for(int i = 1; i < sites.N(); i += 2)
       {
       auto hterm = -J*sites.op("A",i)*sites.op("Adag",i+1);
       hterm += -J*sites.op("Adag",i)*sites.op("A",i+1);
 
-      auto gf = Gate(sites,i,i+1,Gate::tReal,tstep/2.,hterm);
-      auto gb = Gate(sites,i,i+1,Gate::tReal,-tstep/2.,hterm);
-      JGates_forwards.push_back(gf);
-      JGates_backwards.push_back(gb);
+      auto gf = Gate(sites,i,i+1,Gate::tReal,tstep,hterm);
+      auto gb = Gate(sites,i,i+1,Gate::tReal,-tstep,hterm);
+      JGates_tforwards.push_back(gf);
+      JGates_tbackwards.push_back(gb);
       }
-  for(int i = sites.N()-1; i >= 1; --i)
+
+  int offset = 1;
+  if (sites.N() % 2 == 0) { offset = 2; }
+
+  for(int i = sites.N()-offset; i >= 1; i -= 2)
       {
       auto hterm = -J*sites.op("A",i)*sites.op("Adag",i+1);
       hterm += -J*sites.op("Adag",i)*sites.op("A",i+1);
 
-      auto gf = Gate(sites,i,i+1,Gate::tReal,tstep/2.,hterm);
-      auto gb = Gate(sites,i,i+1,Gate::tReal,-tstep/2.,hterm);
-      JGates_forwards.push_back(gf);
-      JGates_backwards.push_back(gb);
+      auto gf = Gate(sites,i,i+1,Gate::tReal,tstep,hterm);
+      auto gb = Gate(sites,i,i+1,Gate::tReal,-tstep,hterm);
+      JGates_tforwards.push_back(gf);
+      JGates_tbackwards.push_back(gb);
       }
 }
 
@@ -43,47 +47,67 @@ double TimeStepperTEBDfast::getTstep(){
   return tstep;
 }
 
-void TimeStepperTEBDfast::initUGates(const double U){
-  UGates.clear();
+void TimeStepperTEBDfast::initUGates(const double Ufrom, const double Uto){
+  UGates1.clear();
+  UGates2.clear();
 
   for (int k = 1; k <= sites.N(); ++k) {
     auto s    = sites.si(k);
     auto sP   = prime(s);
     int HD    = s.nblock();
 
-    IQTensor T(dag(s),sP);
+    IQTensor T1(dag(s),sP);
+    auto T2 = T1;
 
     for (size_t i = 0; i < HD; i++) {
-      T.set(s(i+1),sP(i+1), std::exp( -0.5*U*tstep*Cplx_i*i*(i-1) ) );
+      T1.set(s(i+1),sP(i+1), std::exp( -0.25*Ufrom*tstep*Cplx_i*i*(i-1) ) );
+      T2.set(s(i+1),sP(i+1), std::exp( -0.25*Uto*tstep*Cplx_i*i*(i-1) ) );
     }
 
-    UGates.push_back(T);
+    UGates1.push_back(T1);
+    UGates2.push_back(T2);
   }
 }
+
 
 void TimeStepperTEBDfast::step(IQMPS& psi, const double from, const double to, const bool propagateForward){
-  double U = 0.5*(from+to);
 
   if (propagateForward) {
-    initUGates(U);
-    doStep(psi, JGates_forwards, UGates);
+    initUGates(from,to);
+    doStep(psi, JGates_tforwards);
   }
   else {
-    initUGates(-U);
-    doStep(psi, JGates_backwards, UGates);
+    initUGates(-to,-from);
+    doStep(psi, JGates_tbackwards);
   }
 }
 
-void TimeStepperTEBDfast::doStep(IQMPS& psi, const GateList& JGates, const std::vector<IQTensor> UGates){
-  const bool normalize = args.getBool("Normalize",true);
+void TimeStepperTEBDfast::doStep(IQMPS& psi, const GateList& JGates){
+  // if N odd: "lonely" UGate at end must be applied first
+  if (sites.N() % 2 != 0) { // N is odd
+    psi.Aref(sites.N()) *= UGates1.back();
+    psi.Aref(sites.N()).mapprime(1,0,Site);
+  }
+
+  bool movingFromLeft = true;
+  IQTensor AA;
   auto g = JGates.begin();
-  bool forward = true;
   while(g != JGates.end())
       {
       auto i1 = g->i1();
       auto i2 = g->i2();
-      auto AA = psi.A(i1)*psi.A(i2)*g->gate();
-      AA.mapprime(1,0,Site);
+      if (movingFromLeft) {
+        AA = psi.Aref(i1)*psi.Aref(i2)*UGates1.at(i1-1)*UGates1.at(i2-1)*prime(g->gate(),Site);
+
+        // if N even apply lonely Ugate at right side in the end of left move
+        if (i2 == sites.N() && sites.N() % 2 == 0) { // N is even
+          AA *= prime(prime(UGates2.back(),Site),Site);
+        }
+      } else {
+        AA = psi.Aref(i1)*psi.Aref(i2)*g->gate()*prime(UGates2.at(i1-1),Site)*prime(UGates2.at(i2-1),Site);
+      }
+
+      AA.noprime(Site);
 
       ++g;
       if(g != JGates.end())
@@ -95,50 +119,49 @@ void TimeStepperTEBDfast::doStep(IQMPS& psi, const GateList& JGates, const std::
           //before applying current gate
           if(ni1 >= i2)
               {
-              auto i1index = sites.si(i1);
-              IQTensor A(i1index) ,B;
-              denmatDecomp(AA,A,B,Fromleft,args);
-              auto AU = A*UGates[i1-1];
-              AU.mapprime(1,0,Site);
-              B.mapprime(1,0,Site);
-              psi.setA(i1,AU);
-              psi.setA(i2,B);
+              denmatDecomp(AA,psi.Aref(i1),psi.Aref(i2),Fromleft,args);
+              psi.leftLim(i1);
+              if(psi.rightLim() < i1+2) psi.rightLim(i1+2);
+
+              auto nrm = itensor::norm(psi.Aref(i1+1));
+              if(nrm > 1E-16) psi.Aref(i1+1) *= 1./nrm;
+
               psi.position(ni1); //does no work if position already ni1
               }
-          if(ni1 < i2 && !forward)
+          if(ni1 < i2)
               {
-              auto i1index = sites.si(i1);
-              IQTensor A(i1index) ,B;
-              denmatDecomp(AA,A,B,Fromright,args); //check if A and B need to be switched
-              A.mapprime(1,0,Site);
-              B.mapprime(1,0,Site);
-              psi.setA(i1,A);
-              psi.setA(i2,B);
+              denmatDecomp(AA,psi.Aref(i1),psi.Aref(i2),Fromright,args);
+              if(psi.leftLim() > i1-1) psi.leftLim(i1-1);
+              psi.rightLim(i1+1);
+
+              auto nrm = itensor::norm(psi.Aref(i1));
+              if(nrm > 1E-16) psi.Aref(i1) *= 1./nrm;
+
               psi.position(ni2); //does no work if position already ni2
               }
-          if(ni1 < i2 && forward) {
-            forward = false;
-            auto i1index = sites.si(i1);
-            IQTensor A(i1index) ,B;
-            denmatDecomp(AA,A,B,Fromright,args);
-            auto AU1 = A*UGates[i1-1];
-            auto AU2 = B*UGates[i2-1];
-            AU1.mapprime(1,0,Site);
-            AU2.mapprime(1,0,Site);
-            psi.setA(i1,AU1);
-            psi.setA(i2,AU2);
-            psi.position(ni2); //does no work if position already ni2
-            }
+          if (i2 == ni1 || i1 == ni2) // odd condition || even condition
+              {
+              movingFromLeft = false;
+              }
           }
       else
           {
           //No next gate to analyze, just restore MPS form
-          psi.svdBond(i1,AA,Fromright,args);
+          denmatDecomp(AA,psi.Aref(i1),psi.Aref(i2),Fromright,args);
+          psi.leftLim(i1-1);
+          psi.rightLim(i1+1);
+
+          auto nrm = itensor::norm(psi.Aref(i1));
+          if(nrm > 1E-16) psi.Aref(i1) *= 1./nrm;
+
+          psi.position(1);
           }
       }
 
-  if(normalize)
-      {
-      psi.normalize();
-      }
+  // "lonely" UGate at start must be applied last
+  psi.Aref(1) *= UGates2.front();
+  psi.Aref(1).mapprime(1,0,Site);
+
+  psi.normalize();
+
 }

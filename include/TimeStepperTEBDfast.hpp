@@ -9,15 +9,16 @@ using GateList = std::vector< BondGate<IQTensor> >;
 class TimeStepperTEBDfast {
 private:
   double tstep, J;
-  GateList JGates_forwards;
-  GateList JGates_backwards;
-  std::vector<IQTensor> UGates;
+  GateList JGates_tforwards;
+  GateList JGates_tbackwards;
+  std::vector<IQTensor> UGates1;
+  std::vector<IQTensor> UGates2;
   SiteSet sites;
   Args args;
 
   void initJGates(const double J);
-  void initUGates(const double U);
-  void doStep(IQMPS& psi, const GateList& JGates, const std::vector<IQTensor> UGates);
+  void initUGates(const double Ufrom, const double Uto);
+  void doStep(IQMPS& psi, const GateList& JGates);
 
 public:
   TimeStepperTEBDfast(const SiteSet& sites, const double J, const double tstep, const Args& args);

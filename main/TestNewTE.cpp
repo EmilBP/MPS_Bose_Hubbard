@@ -181,11 +181,23 @@ compareTEalgorithms( SiteSet& sites,
     tmp.push_back((end - begin) / CLOCKS_PER_SEC);
 
 
-    auto TEBD2    = TimeStepperTEBD(sites,J,dt,{"Cutoff=",1E-8});
-    OptimalControl<TimeStepperTEBD,HamiltonianBH> OC2(psi_f,psi_i,TEBD2,H_BH, 0);
-    std::cout << "Original Time-Evolution Algorithm\n";
+    // auto TEBD2    = TimeStepperTEBD(sites,J,dt,{"Cutoff=",1E-8});
+    // OptimalControl<TimeStepperTEBD,HamiltonianBH> OC2(psi_f,psi_i,TEBD2,H_BH, 0);
+    // std::cout << "Original Time-Evolution Algorithm\n";
+    // begin         = clock();
+    // CF            = OC2.checkCostPlusFidelity(control);
+    // end           = clock();
+    // std::cout << "Runtime = " <<  double(end - begin) / CLOCKS_PER_SEC << '\n';
+    // var           = calculateVariance(CF.second);
+    // tmp.push_back(CF.first);
+    // tmp.push_back(var);
+    // tmp.push_back((end - begin) / CLOCKS_PER_SEC);
+
+    auto TEBD3    = TimeStepperTEBDfast(sites,J,dt,{"Cutoff=",1E-8});
+    OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC3(psi_f,psi_i,TEBD3,H_BH, 0);
+    std::cout << "Fast Time-Evolution Algorithm\n";
     begin         = clock();
-    CF            = OC2.checkCostPlusFidelity(control);
+    CF            = OC3.checkCostPlusFidelity(control);
     end           = clock();
     std::cout << "Runtime = " <<  double(end - begin) / CLOCKS_PER_SEC << '\n';
     var           = calculateVariance(CF.second);
@@ -249,9 +261,9 @@ testBackwardsPropagation( SiteSet& sites,
 
 
 int main(){
-  int N         = 5;
-  int Npart     = 5;
-  int locDim    = 5;
+  int N         = 10;
+  int Npart     = 10;
+  int locDim    = 6;
 
   double J      = 1.0;
   double cstart = 3.0;
@@ -279,14 +291,14 @@ int main(){
   // }
 
   // auto tsteps  = linspace(1e-3,1e-2,10);
-  // std::vector<double> tsteps = {1e-2};
-  // auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
-  // printData(data);
+  std::vector<double> tsteps = {1e-2};
+  auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  printData(data);
   // saveData(data,"compareTEalgorithmsN15.txt");
 
 
-  auto data    = testBackwardsPropagation(sites,psi_i,1e-2,cstart,cend,T,J);
-  printData(data);
+  // auto data    = testBackwardsPropagation(sites,psi_i,1e-2,cstart,cend,T,J);
+  // printData(data);
 
   return 0;
 }
