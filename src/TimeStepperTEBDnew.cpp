@@ -47,34 +47,37 @@ double TimeStepperTEBDnew::getTstep(){
   return tstep;
 }
 
-void TimeStepperTEBDnew::initUGates(const double U){
-  UGates.clear();
+void TimeStepperTEBDnew::initUGates(const double Ufrom, const double Uto){
+  UGates1.clear();
+  UGates2.clear();
 
   for (int k = 1; k <= sites.N(); ++k) {
     auto s    = sites.si(k);
     auto sP   = prime(s);
     int HD    = s.nblock();
 
-    IQTensor T(dag(s),sP);
+    IQTensor T1(dag(s),sP);
+    auto T2 = T1;
 
     for (size_t i = 0; i < HD; i++) {
-      T.set(s(i+1),sP(i+1), std::exp( -0.25*U*tstep*Cplx_i*i*(i-1) ) );
+      T1.set(s(i+1),sP(i+1), std::exp( -0.25*Ufrom*tstep*Cplx_i*i*(i-1) ) );
+      T2.set(s(i+1),sP(i+1), std::exp( -0.25*Uto*tstep*Cplx_i*i*(i-1) ) );
     }
 
-    UGates.push_back(T);
+    UGates1.push_back(T1);
+    UGates2.push_back(T2);
   }
 }
 
 
 void TimeStepperTEBDnew::step(IQMPS& psi, const double from, const double to, const bool propagateForward){
-  double U = 0.5*(from+to);
 
   if (propagateForward) {
-    initUGates(U);
+    initUGates(from,to);
     doStep(psi, JGates_tforwards);
   }
   else {
-    initUGates(-U);
+    initUGates(-to,-from);
     doStep(psi, JGates_tbackwards);
   }
 }
@@ -83,7 +86,7 @@ void TimeStepperTEBDnew::doStep(IQMPS& psi, const GateList& JGates){
   // if N odd: "lonely" UGate at end must be applied first
   if (sites.N() % 2 != 0) { // N is odd
     auto AN = psi.A(sites.N());
-    AN *= UGates.at(sites.N()-1);
+    AN *= UGates1.at(sites.N()-1);
     AN.mapprime(1,0,Site);
     psi.setA(sites.N(),AN);
   }
@@ -97,15 +100,15 @@ void TimeStepperTEBDnew::doStep(IQMPS& psi, const GateList& JGates){
       auto i1 = g->i1();
       auto i2 = g->i2();
       if (movingFromLeft) {
-        AA = psi.A(i1)*psi.A(i2)*UGates.at(i1-1)*UGates.at(i2-1)*prime(g->gate(),Site);
+        AA = psi.A(i1)*psi.A(i2)*UGates1.at(i1-1)*UGates1.at(i2-1)*prime(g->gate(),Site);
 
         // if N even apply lonely Ugate at right side in the end of left move
         if (i2 == sites.N() && sites.N() % 2 == 0) { // N is even
-          AA *= prime(prime(UGates.at(i2-1),Site),Site);
+          AA *= prime(prime(UGates2.at(i2-1),Site),Site);
           AA.mapprime(3,2,Site);
         }
       } else {
-        AA = psi.A(i1)*psi.A(i2)*g->gate()*prime(UGates.at(i1-1),Site)*prime(UGates.at(i2-1),Site);
+        AA = psi.A(i1)*psi.A(i2)*g->gate()*prime(UGates2.at(i1-1),Site)*prime(UGates2.at(i2-1),Site);
       }
 
       AA.mapprime(2,1,Site);
@@ -143,7 +146,7 @@ void TimeStepperTEBDnew::doStep(IQMPS& psi, const GateList& JGates){
 
   // "lonely" UGate at start must be applied last
   auto A1 = psi.A(1);
-  A1 *= UGates.front();
+  A1 *= UGates2.front();
   A1.mapprime(1,0,Site);
   psi.setA(1,A1);
 

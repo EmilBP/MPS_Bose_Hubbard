@@ -63,6 +63,15 @@ void saveData(const matrix& data, const std::string filename){
   else std::cout << "Unable to open file\n";
 }
 
+void printData(const matrix& data){
+  for (auto& row : data){
+    for (auto& val : row){
+      std::cout << val << "\t";
+    }
+    std::cout << "\n";
+  }
+}
+
 matrix
 testCostPlusFidelity( SiteSet& sites,
                       IQMPS& psi_i,
@@ -211,20 +220,22 @@ int main(){
   // auto data     = testCostPlusFidelity(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
   // saveData(data,"tstep_cost_varfidelity2.txt");
 
-  std::vector<double> tsteps;
-  tsteps.push_back(1e-2);
-  tsteps.push_back(1e-3);
-
-  for (size_t order = 1; order <= 2; order++) {
-    for (auto& dt : tsteps){
-      auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
-      std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
-      saveData(data,name);
-    }
-  }
+  // std::vector<double> tsteps;
+  // tsteps.push_back(1e-2);
+  // tsteps.push_back(1e-3);
+  //
+  // for (size_t order = 1; order <= 2; order++) {
+  //   for (auto& dt : tsteps){
+  //     auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
+  //     std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
+  //     saveData(data,name);
+  //   }
+  // }
 
   // auto tsteps  = linspace(1e-3,1e-2,10);
-  // auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  std::vector<double> tsteps = {1e-2};
+  auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  printData(data);
   // saveData(data,"compareTEalgorithmsN15.txt");
 
 

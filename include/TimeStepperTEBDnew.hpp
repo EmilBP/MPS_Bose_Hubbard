@@ -11,12 +11,13 @@ private:
   double tstep, J;
   GateList JGates_tforwards;
   GateList JGates_tbackwards;
-  std::vector<IQTensor> UGates;
+  std::vector<IQTensor> UGates1;
+  std::vector<IQTensor> UGates2;
   SiteSet sites;
   Args args;
 
   void initJGates(const double J);
-  void initUGates(const double U);
+  void initUGates(const double Ufrom, const double Uto);
   void doStep(IQMPS& psi, const GateList& JGates);
 
 public:
