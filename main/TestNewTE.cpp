@@ -200,6 +200,52 @@ compareTEalgorithms( SiteSet& sites,
   return result;
 }
 
+matrix
+testBackwardsPropagation( SiteSet& sites,
+                      IQMPS& psi_i,
+                      double dt,
+                      double cstart,
+                      double cend,
+                      double T,
+                      double J)
+{
+
+  matrix result;
+
+  auto times    = generateRange(0,dt,T);
+  auto control  = linspace(cstart,cend,times.size());
+  auto TEBD    = TimeStepperTEBDnew(sites,J,dt,{"Cutoff=",1E-8});
+
+  std::vector<IQMPS> forwards;
+  std::vector<IQMPS> backwards;
+
+  forwards.push_back(psi_i);
+  for (size_t i = 0; i < control.size()-1; i++) {
+    TEBD.step(psi_i,control.at(i),control.at(i+1),true);
+    forwards.push_back(psi_i);
+  }
+
+  backwards.push_back(psi_i);
+  for (size_t i = control.size()-1; i > 0; i--) {
+    TEBD.step(psi_i,control.at(i),control.at(i-1),false);
+    backwards.push_back(psi_i);
+  }
+  std::reverse(backwards.begin(),backwards.end());
+
+  for (size_t i = 0; i < forwards.size(); i++) {
+    std::vector<double> tmp;
+    double re, im;
+    overlap(forwards.at(i),backwards.at(i),re,im);
+    tmp.push_back(re);
+    tmp.push_back(im);
+    tmp.push_back(re*re+im*im);
+
+    result.push_back(tmp);
+  }
+
+  return result;
+}
+
 
 
 int main(){
@@ -233,11 +279,14 @@ int main(){
   // }
 
   // auto tsteps  = linspace(1e-3,1e-2,10);
-  std::vector<double> tsteps = {1e-2};
-  auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
-  printData(data);
+  // std::vector<double> tsteps = {1e-2};
+  // auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  // printData(data);
   // saveData(data,"compareTEalgorithmsN15.txt");
 
+
+  auto data    = testBackwardsPropagation(sites,psi_i,1e-2,cstart,cend,T,J);
+  printData(data);
 
   return 0;
 }
