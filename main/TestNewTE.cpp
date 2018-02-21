@@ -4,6 +4,7 @@
 #include "TimeStepperTEBD.hpp"
 #include "TimeStepperTEBDfast.hpp"
 #include "TimeStepperTEBDnew.hpp"
+#include "TimeStepperMPO.hpp"
 #include "InitializeState.hpp"
 #include "OptimalControl.hpp"
 #include <fstream>
@@ -258,25 +259,95 @@ testBackwardsPropagation( SiteSet& sites,
   return result;
 }
 
+matrix
+compareSpeed(         SiteSet& sites,
+                      IQMPS& psi_i,
+                      double dt,
+                      double cstart,
+                      double cend,
+                      double T,
+                      double J)
+{
+
+  matrix result;
+
+  auto times    = generateRange(0,dt,T);
+  auto control  = linspace(cstart,cend,times.size());
+  clock_t begin, end;
+  IQMPS psi;
+  std::vector<double> tmp;
+  double TT;
+
+  auto TEBDold  = TimeStepperTEBD(sites,J,dt,{"Cutoff=",1E-8});
+  auto TEBDnew  = TimeStepperTEBDnew(sites,J,dt,{"Cutoff=",1E-8});
+  auto TEBDfast = TimeStepperTEBDfast(sites,J,dt,{"Cutoff=",1E-8});
+  auto tMPO     = TimeStepperMPO(sites,J,dt,{"Cutoff=",1E-8});
+
+
+
+  psi = psi_i;
+  begin = clock();
+  for (size_t i = 0; i < control.size()-1; i++) {
+    tMPO.step(psi,control.at(i),control.at(i+1),true);
+  }
+  end = clock();
+  TT = double(end - begin) / CLOCKS_PER_SEC;
+  tmp.push_back(TT);
+  std::cout << "Runtime MPO = " << TT << '\n';
+
+  psi = psi_i;
+  begin = clock();
+  for (size_t i = 0; i < control.size()-1; i++) {
+    TEBDold.step(psi,control.at(i),control.at(i+1),true);
+  }
+  end = clock();
+  TT = double(end - begin) / CLOCKS_PER_SEC;
+  tmp.push_back(TT);
+  std::cout << "Runtime TEBD (old) = " << TT << '\n';
+
+  psi = psi_i;
+  begin = clock();
+  for (size_t i = 0; i < control.size()-1; i++) {
+    TEBDnew.step(psi,control.at(i),control.at(i+1),true);
+  }
+  end = clock();
+  TT = double(end - begin) / CLOCKS_PER_SEC;
+  tmp.push_back(TT);
+  std::cout << "Runtime TEBD (new) = " << TT << '\n';
+
+  psi = psi_i;
+  begin = clock();
+  for (size_t i = 0; i < control.size()-1; i++) {
+    TEBDfast.step(psi,control.at(i),control.at(i+1),true);
+  }
+  end = clock();
+  TT = double(end - begin) / CLOCKS_PER_SEC;
+  tmp.push_back(TT);
+  std::cout << "Runtime TEBD (fast) = " << TT << '\n';
+
+  result.push_back(tmp);
+  return result;
+}
 
 
 int main(){
-  int N         = 10;
-  int Npart     = 10;
-  int locDim    = 6;
-
+  // int N         = 10;
+  // int Npart     = 10;
+  // int locDim    = 10;
+  //
   double J      = 1.0;
   double cstart = 3.0;
   double cend   = 10.0;
   double T      = 2.0;
-
-  auto sites    = Boson(N,locDim);
-  auto psi_i    = InitializeState(sites,Npart,J,cstart);
-  auto psi_f    = InitializeState(sites,Npart,J,cend);
+  //
+  // auto sites    = Boson(N,locDim);
+  // auto psi_i    = InitializeState(sites,Npart,J,cstart);
+  // auto psi_f    = InitializeState(sites,Npart,J,cend);
 
   // auto tsteps   = linspace(5e-5,5e-4,8);
   // auto data     = testCostPlusFidelity(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
   // saveData(data,"tstep_cost_varfidelity2.txt");
+
 
   // std::vector<double> tsteps;
   // tsteps.push_back(1e-2);
@@ -290,15 +361,31 @@ int main(){
   //   }
   // }
 
+
   // auto tsteps  = linspace(1e-3,1e-2,10);
-  std::vector<double> tsteps = {1e-2};
-  auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
-  printData(data);
+  // std::vector<double> tsteps = {1e-2};
+  // auto data    = compareTEalgorithms(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
+  // printData(data);
   // saveData(data,"compareTEalgorithmsN15.txt");
 
 
   // auto data    = testBackwardsPropagation(sites,psi_i,1e-2,cstart,cend,T,J);
   // printData(data);
+
+  std::vector<int> sizes = {5,6,7,8,9,10};
+  for (auto& s : sizes){
+
+    int N         = s;
+    int Npart     = s;
+    int locDim    = 5;
+
+    auto sites    = Boson(N,locDim);
+    auto psi_i    = InitializeState(sites,Npart,J,cstart);
+    auto psi_f    = InitializeState(sites,Npart,J,cend);
+    auto data     = compareSpeed(sites,psi_i,1e-2,cstart,cend,T,J);
+    std::string name = "compareTEalgorithmsN" + std::to_string(s) + "d" + std::to_string(locDim) + ".txt";
+    saveData(data,name);
+  }
 
   return 0;
 }
