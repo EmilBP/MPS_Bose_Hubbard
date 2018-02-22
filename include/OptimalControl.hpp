@@ -2,36 +2,44 @@
 #define OPTIMALCONTROL_H
 
 #include "itensor/all.h"
-#include "TimeEvolve.hpp"
-#include "autoMPOstrategy.h"
 #include <vector>
 #include <iterator>
 #include <algorithm>
-#include <functional>
+
 
 
 using namespace itensor;
+using vec = std::vector<double>;
+using vecpair = std::pair<double, vec>;
 
+template<class TimeStepper, class Hamiltonian>
 class OptimalControl{
 private:
-  double gamma;
+  TimeStepper& timeStepper;
+  Hamiltonian& hamil;
+  double gamma, tstep;
   IQMPS psi_target, psi_init;
-  autoMPOstrategy& MPOstrat;
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
 
-  double getCost(IQMPS& psi, std::vector<double>& control);
-  std::vector<AutoMPO> updateHamiltonian(std::vector<double>& control);
-  std::vector<double> updateControl(std::vector<double>& gradient);
+  double getFidelity(const vec& control);
+  double getRegularisation(const vec& control);
+  vecpair getRegPlusRegGrad(const vec& control);
+  vecpair getFidelityPlusFidelityGrad(const vec& control);
+  void calcPsi(const vec& control);
+  void calcChi(const vec& control);
 
 public:
-  OptimalControl(IQMPS& psi_target, IQMPS& psi_init, autoMPOstrategy& MPOstrat, double gamma);
-  std::vector<double> Optimize(std::vector<double>& control_init, double dt, size_t maxeval, const Args& args);
+  OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, Hamiltonian& hamil, double gamma);
 
-  std::vector<double> getAnalyticGradient(std::vector<double>& control,double dt);
-  std::vector<double> getAnalyticGradientTest(std::vector<double>& control,double dt,const Args& args);
-  std::vector<double> getNumericGradient(std::vector<double>& control,double epsilon, double dt, const Args& args);
+  double getCost(const vec& control);
+  vecpair getAnalyticGradient(const vec& control);
+  vecpair getNumericGradient(const vec& control);
+
+  vecpair checkCostPlusFidelity(const vec& control);
+
+
 };
 
 #endif
