@@ -6,15 +6,17 @@
 #include "TimeStepperTEBDnew.hpp"
 #include "TimeStepperMPO.hpp"
 #include "InitializeState.hpp"
+#include "correlations.hpp"
 #include "OptimalControl.hpp"
 #include <fstream>
 #include <string>
 #include <time.h>
+#include "gnuplot-iostream.h"
 
 using namespace itensor;
 
 using matrix = std::vector< std::vector<double> >;
-
+using GPdata = std::vector< std::vector< std::pair< double,double> > >;
 
 std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
     std::vector<double> array;
@@ -73,15 +75,47 @@ void printData(const matrix& data){
   }
 }
 
+matrix convertToColumn(const matrix& data){
+  matrix cdata;
+  for (size_t i = 0; i < data.at(0).size(); i++) {
+    std::vector<double> tmp;
+
+    for (auto& row : data){
+      tmp.push_back(row.at(i));
+    }
+    cdata.push_back(tmp);
+  }
+  return cdata;
+}
+
+GPdata convertToGPdata(const matrix& data){
+  GPdata result;
+  auto cdata = convertToColumn(data);
+  auto x = cdata.at(0);
+
+  for (size_t i = 1; i < cdata.size(); i++) {
+    std::vector< std::pair<double, double> > tmp;
+    auto col = cdata.at(i);
+
+    for (size_t j = 0; j < col.size(); j++) {
+      tmp.push_back(std::make_pair( x.at(j) , col.at(j) ));
+    }
+    result.push_back(tmp);
+  }
+  return result;
+}
+
+
 matrix
-testCostPlusFidelity( SiteSet& sites,
-                      IQMPS& psi_i,
-                      IQMPS& psi_f,
-                      std::vector<double>& tsteps,
+testCostPlusFidelity( SiteSet sites,
+                      IQMPS psi_i,
+                      IQMPS psi_f,
+                      std::vector<double> tsteps,
                       double cstart,
                       double cend,
                       double T,
-                      double J)
+                      double J,
+                      bool plot)
 {
 
   matrix result;
@@ -94,8 +128,8 @@ testCostPlusFidelity( SiteSet& sites,
 
     std::cout << "Calculating using control of length " << control.size() << " w. final value " << control.back() << '\n';
 
-    auto TEBD     = TimeStepperTEBD(sites,J,dt,{"Cutoff=",1E-9});
-    OptimalControl<TimeStepperTEBD,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
+    auto TEBD     = TimeStepperTEBDfast(sites,J,dt,{"Cutoff=",1E-8});
+    OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
     auto CF       = OC.checkCostPlusFidelity(control);
     double var    = calculateVariance(CF.second);
 
@@ -108,13 +142,30 @@ testCostPlusFidelity( SiteSet& sites,
     std::cout << "Done " << count++ << " out of " << tsteps.size() << '\n';
   }
 
+  if (plot) {
+    auto gpdat  = convertToGPdata(result);
+    Gnuplot gp3;
+    gp3 << "set xlabel 'dt'\n";
+    gp3 << "set ylabel 'Cost'\n";
+    gp3 << "plot"
+    << gp3.file1d(gpdat.at(0)) << "with linespoints ls 1,"
+    << std::endl;
+
+    Gnuplot gp4;
+    gp4 << "set xlabel 'dt'\n";
+    gp4 << "set ylabel 'var(F)'\n";
+    gp4 << "plot"
+    << gp4.file1d(gpdat.at(1)) << "with linespoints ls 1,"
+    << std::endl;
+  }
+
   return result;
 }
 
 matrix
-matchGradients(       SiteSet& sites,
-                      IQMPS& psi_i,
-                      IQMPS& psi_f,
+matchGradients(       SiteSet sites,
+                      IQMPS psi_i,
+                      IQMPS psi_f,
                       double tstep,
                       double cstart,
                       double cend,
@@ -124,10 +175,9 @@ matchGradients(       SiteSet& sites,
 {
 
   matrix result;
-  size_t count  = 1;
   auto H_BH     = HamiltonianBH(sites,J,tstep,order);
-  auto TEBD     = TimeStepperTEBD(sites,J,tstep,{"Cutoff=",1E-9});
-  OptimalControl<TimeStepperTEBD,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
+  auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-9});
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
 
   auto times    = generateRange(0,tstep,T);
   auto control  = linspace(cstart,cend,times.size());
@@ -147,10 +197,10 @@ matchGradients(       SiteSet& sites,
 }
 
 matrix
-compareTEalgorithms( SiteSet& sites,
-                      IQMPS& psi_i,
-                      IQMPS& psi_f,
-                      std::vector<double>& tsteps,
+compareTEalgorithms( SiteSet sites,
+                      IQMPS psi_i,
+                      IQMPS&psi_f,
+                      std::vector<double> tsteps,
                       double cstart,
                       double cend,
                       double T,
@@ -214,20 +264,24 @@ compareTEalgorithms( SiteSet& sites,
 }
 
 matrix
-testBackwardsPropagation( SiteSet& sites,
-                      IQMPS& psi_i,
+testBackwardsPropagation( SiteSet sites,
+                      IQMPS psi_i,
+                      IQMPS psi_f,
                       double dt,
                       double cstart,
                       double cend,
                       double T,
-                      double J)
+                      double J,
+                      bool plot)
 {
 
   matrix result;
 
   auto times    = generateRange(0,dt,T);
   auto control  = linspace(cstart,cend,times.size());
-  auto TEBD    = TimeStepperTEBDnew(sites,J,dt,{"Cutoff=",1E-8});
+  auto TEBD     = TimeStepperTEBDfast(sites,J,dt,{"Cutoff=",1E-8});
+  auto H_BH     = HamiltonianBH(sites,J,0);
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
 
   std::vector<IQMPS> forwards;
   std::vector<IQMPS> backwards;
@@ -245,23 +299,48 @@ testBackwardsPropagation( SiteSet& sites,
   }
   std::reverse(backwards.begin(),backwards.end());
 
+
+  auto OCres = OC.checkCostPlusFidelity(control);
+
+
   for (size_t i = 0; i < forwards.size(); i++) {
     std::vector<double> tmp;
     double re, im;
     overlap(forwards.at(i),backwards.at(i),re,im);
+    tmp.push_back(times.at(i));
     tmp.push_back(re);
     tmp.push_back(im);
     tmp.push_back(re*re+im*im);
+    tmp.push_back(OCres.second.at(i));
 
     result.push_back(tmp);
+  }
+
+  if (plot) {
+    auto gpdat = convertToGPdata(result);
+    Gnuplot gp1;
+    // gp1 << "set yrange [0.9999:1]\n";
+    gp1 << "set xlabel 't'\n";
+    gp1 << "set ylabel 'Fidelity'\n";
+    gp1 << "plot"
+    << gp1.file1d(gpdat.at(2)) << "with lines title 'for-back',"
+    << std::endl;
+
+    Gnuplot gp2;
+    // gp2 << "set yrange [0.94:0.945]\n";
+    gp2 << "set xlabel 't'\n";
+    gp2 << "set ylabel 'Fidelity'\n";
+    gp2 << "plot"
+    << gp2.file1d(gpdat.at(3)) << "with lines title 'psi-chi',"
+    << std::endl;
   }
 
   return result;
 }
 
 matrix
-compareSpeed(         SiteSet& sites,
-                      IQMPS& psi_i,
+compareSpeed(         SiteSet sites,
+                      IQMPS psi_i,
                       double dt,
                       double cstart,
                       double cend,
@@ -330,36 +409,103 @@ compareSpeed(         SiteSet& sites,
 }
 
 
+matrix
+testTimeEvolution( SiteSet sites,
+                      int Npart,
+                      IQMPS psi_i,
+                      double dt,
+                      double T,
+                      double Uevol,
+                      double Jevol,
+                      bool plot)
+{
+
+  matrix result;
+
+  auto times    = generateRange(0,dt,T);
+  std::vector<double> control(times.size(),2.0);
+  auto TEBD     = TimeStepperTEBDfast(sites,Jevol,dt,{"Cutoff=",1E-8});
+
+  std::vector<double> condfrac;
+
+  auto lambda1 = correlationTerm(sites,psi_i,"Adag","A");
+  condfrac.push_back((double) lambda1/Npart);
+
+  for (size_t i = 0; i < control.size()-1; i++) {
+    TEBD.step(psi_i,control.at(i),control.at(i+1),true);
+
+    lambda1 = correlationTerm(sites,psi_i,"Adag","A");
+    condfrac.push_back((double) lambda1/Npart);
+  }
+
+  for (size_t i = 0; i < condfrac.size(); i++) {
+    std::vector<double> tmp;
+    tmp.push_back(times.at(i));
+    tmp.push_back(condfrac.at(i));
+
+    result.push_back(tmp);
+  }
+
+  if (plot) {
+    auto gpdat = convertToGPdata(result);
+    Gnuplot gp1;
+    gp1 << "set xlabel 't'\n";
+    gp1 << "set ylabel 'f_c'\n";
+    gp1 << "plot"
+    << gp1.file1d(gpdat.front()) << "with lines,"
+    << std::endl;
+  }
+
+  return result;
+}
+
+
 int main(){
-  // int N         = 10;
-  // int Npart     = 10;
-  // int locDim    = 10;
-  //
+  int N         = 5;
+  int Npart     = 5;
+  int locDim    = 5;
+
   double J      = 1.0;
   double cstart = 3.0;
   double cend   = 10.0;
   double T      = 2.0;
+
+  auto sites    = Boson(N,locDim);
+  auto psi_i    = InitializeState(sites,Npart,J,cstart);
+  auto psi_f    = InitializeState(sites,Npart,J,cend);
+  auto psi_SF   = SetupSuperfluid(sites,Npart);
+
+  // //
+  // //  Test TE algorithm through SF revival
+  // //
+  // auto dataTE  = testTimeEvolution(sites,Npart,psi_SF,1e-2,10,1,0.03,true);
   //
-  // auto sites    = Boson(N,locDim);
-  // auto psi_i    = InitializeState(sites,Npart,J,cstart);
-  // auto psi_f    = InitializeState(sites,Npart,J,cend);
+  // //
+  // //  Compare backwards and forwards propagation
+  // //
+  // auto dataBF  = testBackwardsPropagation(sites,psi_i,psi_f,1e-2,cstart,cend,T,J,true);
+  //
+  // //
+  // //  Compare cost and variance of fidelity for various time steps
+  // //
+  // auto tsteps   = linspace(1e-3,1e-2,15);
+  // auto dataCF   = testCostPlusFidelity(sites,psi_i,psi_f,tsteps,cstart,cend,T,J,true);
 
-  // auto tsteps   = linspace(5e-5,5e-4,8);
-  // auto data     = testCostPlusFidelity(sites,psi_i,psi_f,tsteps,cstart,cend,T,J);
-  // saveData(data,"tstep_cost_varfidelity2.txt");
 
-
-  // std::vector<double> tsteps;
-  // tsteps.push_back(1e-2);
+  //
+  //  Match gradients
+  //
+  std::vector<double> tsteps;
+  tsteps.push_back(1e-2);
   // tsteps.push_back(1e-3);
-  //
-  // for (size_t order = 1; order <= 2; order++) {
-  //   for (auto& dt : tsteps){
-  //     auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
-  //     std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
-  //     saveData(data,name);
-  //   }
-  // }
+
+  for (size_t order = 0; order <= 2; order++) {
+    for (auto& dt : tsteps){
+      auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
+      std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
+      saveData(data,name);
+    }
+  }
 
 
   // auto tsteps  = linspace(1e-3,1e-2,10);
@@ -369,23 +515,22 @@ int main(){
   // saveData(data,"compareTEalgorithmsN15.txt");
 
 
-  // auto data    = testBackwardsPropagation(sites,psi_i,1e-2,cstart,cend,T,J);
-  // printData(data);
 
-  std::vector<int> sizes = {5,6,7,8,9,10};
-  for (auto& s : sizes){
 
-    int N         = s;
-    int Npart     = s;
-    int locDim    = 5;
-
-    auto sites    = Boson(N,locDim);
-    auto psi_i    = InitializeState(sites,Npart,J,cstart);
-    auto psi_f    = InitializeState(sites,Npart,J,cend);
-    auto data     = compareSpeed(sites,psi_i,1e-2,cstart,cend,T,J);
-    std::string name = "compareTEalgorithmsN" + std::to_string(s) + "d" + std::to_string(locDim) + ".txt";
-    saveData(data,name);
-  }
+  // std::vector<int> sizes = {5,6,7,8,9,10};
+  // for (auto& s : sizes){
+  //
+  //   int N         = s;
+  //   int Npart     = s;
+  //   int locDim    = 5;
+  //
+  //   auto sites    = Boson(N,locDim);
+  //   auto psi_i    = InitializeState(sites,Npart,J,cstart);
+  //   auto psi_f    = InitializeState(sites,Npart,J,cend);
+  //   auto data     = compareSpeed(sites,psi_i,1e-2,cstart,cend,T,J);
+  //   std::string name = "compareTEalgorithmsN" + std::to_string(s) + "d" + std::to_string(locDim) + ".txt";
+  //   saveData(data,name);
+  // }
 
   return 0;
 }

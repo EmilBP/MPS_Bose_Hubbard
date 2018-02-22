@@ -77,7 +77,7 @@ void TimeStepperTEBDfast::step(IQMPS& psi, const double from, const double to, c
     doStep(psi, JGates_tforwards);
   }
   else {
-    initUGates(-to,-from);
+    initUGates(-from,-to);
     doStep(psi, JGates_tbackwards);
   }
 }

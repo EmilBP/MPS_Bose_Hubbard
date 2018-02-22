@@ -60,7 +60,7 @@ template<class TimeStepper, class Hamiltonian>
 void OptimalControl<TimeStepper,Hamiltonian>::calcChi(const vec& control){
 
   const bool propagateForward = false;
-  auto chiT = psi_target;
+  auto chiT = Cplx_i*psi_target;
   chi_t.clear();
   chi_t.push_back(chiT);
 
@@ -102,10 +102,10 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::getFidelityPlusFidelityGrad(con
   calcPsi(control);
   calcChi(control);
 
-  auto overlapFactor = overlapC(psi_target,psi_t.back());
+  auto overlapFactor = overlapC(psi_t.back(),psi_target);
 
   for (size_t i = 0; i < control.size(); i++) {
-    g.push_back( (overlapC( chi_t.at(i) , hamil.dHdU(control.at(i)) , psi_t.at(i) )*overlapFactor ).real() );
+    g.push_back( -(overlapC( chi_t.at(i) , hamil.dHdU(control.at(i)) , psi_t.at(i) )*overlapFactor ).real() );
   }
 
   double re, im;

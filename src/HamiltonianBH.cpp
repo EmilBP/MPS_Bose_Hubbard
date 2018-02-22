@@ -11,9 +11,9 @@ void HamiltonianBH::setTstep(const double tstep_){
   tstep = tstep_;
   prefactors.clear();
 
-  prefactors.push_back(Cplx_i*tstep);
-  prefactors.push_back(-tstep*tstep/2.0);
-  prefactors.push_back(-Cplx_i*tstep*tstep*tstep/6.0);
+  prefactors.push_back(tstep);
+  prefactors.push_back(Cplx_i*tstep*tstep/2.0);
+  prefactors.push_back(-tstep*tstep*tstep/6.0);
 }
 
 void HamiltonianBH::setExpansionOrder(size_t expansionOrder_){
