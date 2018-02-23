@@ -8,6 +8,7 @@
 #include "InitializeState.hpp"
 #include "correlations.hpp"
 #include "OptimalControl.hpp"
+#include "OptimalControlDummy.hpp"
 #include <fstream>
 #include <string>
 #include <time.h>
@@ -176,18 +177,18 @@ matchGradients(       SiteSet sites,
 
   matrix result;
   auto H_BH     = HamiltonianBH(sites,J,tstep,order);
-  auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-9});
+  auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
 
   auto times    = generateRange(0,tstep,T);
   auto control  = linspace(cstart,cend,times.size());
   auto Agrad    = OC.getAnalyticGradient(control);
-  // auto Ngrad    = OC.getNumericGradient(control);
+  auto Ngrad    = OC.getNumericGradient(control);
 
   for (size_t i = 0; i < Agrad.second.size(); i++) {
     std::vector<double> tmp;
     tmp.push_back(Agrad.second.at(i));
-    // tmp.push_back(Ngrad.second.at(i));
+    tmp.push_back(Ngrad.second.at(i));
     // tmp.push_back( abs(Agrad.second.at(i)-Ngrad.second.at(i)) );
 
     result.push_back(tmp);
@@ -499,7 +500,7 @@ int main(){
   tsteps.push_back(1e-2);
   // tsteps.push_back(1e-3);
 
-  for (size_t order = 0; order <= 2; order++) {
+  for (size_t order = 0; order <= 0; order++) {
     for (auto& dt : tsteps){
       auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
       std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
