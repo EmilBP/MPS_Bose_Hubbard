@@ -1,9 +1,10 @@
 #ifndef OPTIMALCONTROLDUMMY_H
 #define OPTIMALCONTROLDUMMY_H
 
+#include "IpIpoptApplication.hpp"
 #include "itensor/all.h"
 #include <vector>
-#include <math.h> 
+#include <math.h>
 #include <iterator>
 #include <algorithm>
 
@@ -16,6 +17,7 @@ class OptimalControlDummy{
 private:
   vec weights;
   double tstep;
+
 
 
 public:
