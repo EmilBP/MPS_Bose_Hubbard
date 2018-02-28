@@ -1,5 +1,6 @@
 #include "OCdummy_nlp.hpp"
 #include "OptimalControlDummy.hpp"
+#include "ControlBasisFactory.hpp"
 #include "IpIpoptApplication.hpp"
 
 using namespace itensor;
@@ -66,10 +67,11 @@ int main(){
 
   std::vector<double> weights = {5.5 , -1.2 , -6.3 , 0.3};
   auto OCD      = OptimalControlDummy(weights,tstep);
+  auto control  = ControlBasisFactory::buildCRAB(cstart,cend,tstep,T,100);
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,cstart,cend);
+  SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,control,cstart,cend);
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)

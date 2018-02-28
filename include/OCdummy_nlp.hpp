@@ -3,6 +3,7 @@
 
 #include "IpTNLP.hpp"
 #include "OptimalControlDummy.hpp"
+#include "ControlBasis.hpp"
 #include <assert.h>
 
 using namespace Ipopt;
@@ -10,12 +11,13 @@ using namespace Ipopt;
 class OCdummy_nlp : public TNLP
 {
 private:
-  OptimalControlDummy ctrl;
+  OptimalControlDummy optControlProb;
+  ControlBasis control;
   double cstart, cend;
 
 public:
   /** default constructor */
-  OCdummy_nlp(OptimalControlDummy& ctrl, double cstart, double cend);
+  OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& control, double cstart, double cend);
 
   /** default destructor */
   virtual ~OCdummy_nlp();

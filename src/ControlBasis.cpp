@@ -24,3 +24,7 @@ vec ControlBasis::operator()(const vec& c){
   }
   return u;
 }
+
+vec ControlBasis::operator[](const vec& g){
+  return g;
+}

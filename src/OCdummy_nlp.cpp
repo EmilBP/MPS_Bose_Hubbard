@@ -1,8 +1,8 @@
 #include "OCdummy_nlp.hpp"
 
 // constructor
-OCdummy_nlp::OCdummy_nlp(OptimalControlDummy& ctrl, double cstart, double cend)
- : ctrl(ctrl), cstart(cstart), cend(cend) {}
+OCdummy_nlp::OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& control, double cstart, double cend)
+ : optControlProb(optControlProb), control(control), cstart(cstart), cend(cend) {}
 
 //destructor
 OCdummy_nlp::~OCdummy_nlp()
@@ -77,7 +77,7 @@ bool OCdummy_nlp::eval_f(Index n, const Number* x, bool new_x, Number& obj_value
   std::vector<double> input;
   input.insert(input.end(), x, x+n);
 
-  obj_value = ctrl.getCost(input);
+  obj_value = optControlProb.getCost(control(input));
 
   return true;
 }
@@ -87,7 +87,7 @@ bool OCdummy_nlp::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad
   std::vector<double> input;
   input.insert(input.end(), x, x+n);
 
-  auto grad = ctrl.getAnalyticGradient(input);
+  auto grad = optControlProb.getAnalyticGradient(control(input));
 
   std::copy(grad.second.begin(), grad.second.end(), grad_f);
 

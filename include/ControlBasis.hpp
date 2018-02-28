@@ -22,6 +22,7 @@ public:
   ControlBasis(vec& u0, vec& S, mat& f);
 
   vec operator()(const vec& c);
+  vec operator[](const vec& g);
 
 };
 

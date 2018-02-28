@@ -19,7 +19,6 @@ private:
   double tstep;
 
 
-
 public:
   OptimalControlDummy(vec& weights, double tstep);
 
