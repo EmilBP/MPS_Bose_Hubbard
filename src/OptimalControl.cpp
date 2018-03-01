@@ -182,6 +182,43 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::checkCostPlusFidelity(const vec
   return std::make_pair(cost,fid);
 }
 
+template<class TimeStepper, class Hamiltonian>
+double OptimalControl<TimeStepper,Hamiltonian>::getCost(const ControlBasis& bControl){
+  return getCost(bControl.convControl() );
+}
+
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getAnalyticGradient(const ControlBasis& bControl){
+  auto result = getAnalyticGradient(bControl.convControl());
+  return std::make_pair(result.first,bControl.convGrad(result.second));
+}
+
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getNumericGradient(const ControlBasis& bControl){
+  auto newbControl = bControl;
+  auto cArray = newbControl.getCArray();
+  double Jp, Jm;
+  double epsilon = 1e-5;
+  std::vector<double> g;
+
+  for (auto& ci : cArray){
+    ci        += epsilon;
+    newbControl.setCArray(cArray);
+    Jp         = getCost(newbControl);
+
+    ci        -= 2.0*epsilon;
+    newbControl.setCArray(cArray);
+    Jm         = getCost(newbControl);
+
+    ci        += epsilon;
+    newbControl.setCArray(cArray);
+    g.push_back((Jp-Jm)/(2.0*epsilon));
+  }
+  double cost = getCost(newbControl);
+
+  return std::make_pair(cost,g);
+}
+
 template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDfast,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDnew,HamiltonianBH>;

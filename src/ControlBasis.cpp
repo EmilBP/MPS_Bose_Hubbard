@@ -61,3 +61,12 @@ vec ControlBasis::convGrad(const vec& gradu) const{
   return gc;
 
 }
+
+
+void ControlBasis::exportParameters(vec& u_, vec& u0_, vec& S_, vec& c_, mat& f_){
+  u_  = convControl();
+  u0_ = u0;
+  S_  = S;
+  c_  = c;
+  f_  = f;
+}

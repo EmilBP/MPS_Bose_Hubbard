@@ -3,6 +3,7 @@
 
 #include "ControlBasis.hpp"
 #include <vector>
+#include <assert.h>
 #include "math.h"
 
 #define PI 3.14159265
@@ -11,10 +12,11 @@ class ControlBasisFactory{
 
 private:
   static std::vector<double> linspace(double a, double b, int n);
+  static std::vector<double> sigmoid(std::vector<double>& x, double k, double offset);
 
 public:
 
-  static ControlBasis buildCRAB(double cstart, double cend, double tstep, double T, size_t M);
+  static ControlBasis buildCBsin(std::vector<double>& u0, double tstep, double T, size_t M);
 
 };
 
@@ -29,11 +31,20 @@ std::vector<double> ControlBasisFactory::linspace(double a, double b, int n){
   return array;
 }
 
-ControlBasis ControlBasisFactory::buildCRAB(double cstart, double cend, double tstep, double T, size_t M){
-  auto u0 = linspace(cstart,cend,T/tstep+1);
-  std::vector<double> S(u0.size(),1.0);
+std::vector<double> ControlBasisFactory::sigmoid(std::vector<double>& x, double k, double offset){
+  std::vector<double> S;
+  for (auto& xval : x){
+    S.push_back(1.0/(1+exp(-k*(xval-offset))));
+  }
+  return S;
+}
+
+ControlBasis ControlBasisFactory::buildCBsin(std::vector<double>& u0, double tstep, double T, size_t M){
+  assert( u0.size()-(1 + T/tstep) < 1e-5 );
+  auto x    = linspace(0,100,u0.size());
+  auto S    = sigmoid(x,1.0,6);
   S.front() = 0;
-  S.back() = 0;
+  S.back()  = 0;
 
   std::vector<std::vector<double> > f;
   for (size_t i = 0; i < u0.size(); i++) {

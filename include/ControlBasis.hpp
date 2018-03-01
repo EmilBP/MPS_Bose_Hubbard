@@ -32,6 +32,7 @@ public:
   vec convControl() const;
   vec convGrad(const vec& gradu) const;
 
+  void exportParameters(vec& u_, vec& u0_, vec& S_, vec& c_, mat& f_);
 };
 
 #endif
