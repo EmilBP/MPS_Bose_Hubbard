@@ -12,12 +12,11 @@ class OCdummy_nlp : public TNLP
 {
 private:
   OptimalControlDummy optControlProb;
-  ControlBasis control;
-  double cstart, cend;
+  ControlBasis bControl;
 
 public:
   /** default constructor */
-  OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& control, double cstart, double cend);
+  OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& bControl);
 
   /** default destructor */
   virtual ~OCdummy_nlp();

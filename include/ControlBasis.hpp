@@ -15,14 +15,20 @@ private:
 
   vec u0;
   vec S;
+  vec c;
   mat f;
+  double dt;
+  size_t M;
 
 
 public:
-  ControlBasis(vec& u0, vec& S, mat& f);
+  ControlBasis(vec& u0, vec& S, mat& f, double dt);
 
-  vec operator()(const vec& c);
-  vec operator[](const vec& g);
+  vec getCArray() const;
+  size_t getM() const;
+  void setCArray(const vec& cArray);
+  vec convControl() const;
+  vec convGrad(const vec& gradu) const;
 
 };
 

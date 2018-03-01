@@ -44,7 +44,7 @@ ControlBasis ControlBasisFactory::buildCRAB(double cstart, double cend, double t
     f.push_back(fi);
   }
 
-  return ControlBasis(u0,S,f);
+  return ControlBasis(u0,S,f,tstep);
 }
 
 

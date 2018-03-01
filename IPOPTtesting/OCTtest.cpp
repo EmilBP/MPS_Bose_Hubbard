@@ -57,21 +57,45 @@ matrix matchGradients(std::vector<double> weights, double tstep, double cstart, 
   return result;
 }
 
+matrix matchControlGradients(std::vector<double> weights, double tstep, double cstart, double cend, double T) {
+  matrix result;
+
+  auto OCD      = OptimalControlDummy(weights,tstep);
+  auto c        = linspace(cstart,cend,10);
+  auto control  = ControlBasisFactory::buildCRAB(cstart,cend,tstep,T,c.size());
+
+  auto Agrad    = OCD.getAnalyticGradient(control);
+  auto Ngrad    = OCD.getNumericGradient(control);
+
+  for (size_t i = 0; i < Agrad.second.size(); i++) {
+    std::vector<double> tmp;
+    tmp.push_back(Agrad.second.at(i));
+    tmp.push_back(Ngrad.second.at(i));
+    result.push_back(tmp);
+  }
+
+  return result;
+}
+
 
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 5;
+  double T      = 1;
   double cstart = 2;
   double cend   = 7;
 
   std::vector<double> weights = {5.5 , -1.2 , -6.3 , 0.3};
+  // auto data = matchControlGradients(weights,tstep,cstart,cend,T);
+  // printData(data);
+
   auto OCD      = OptimalControlDummy(weights,tstep);
-  auto control  = ControlBasisFactory::buildCRAB(cstart,cend,tstep,T,100);
+  auto bControl = ControlBasisFactory::buildCRAB(cstart,cend,tstep,T,10);
+
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,control,cstart,cend);
+  SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,bControl);
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)

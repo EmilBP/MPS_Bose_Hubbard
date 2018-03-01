@@ -1,8 +1,8 @@
 #include "OCdummy_nlp.hpp"
 
 // constructor
-OCdummy_nlp::OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& control, double cstart, double cend)
- : optControlProb(optControlProb), control(control), cstart(cstart), cend(cend) {}
+OCdummy_nlp::OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& bControl)
+ : optControlProb(optControlProb), bControl(bControl) {}
 
 //destructor
 OCdummy_nlp::~OCdummy_nlp()
@@ -12,7 +12,7 @@ bool OCdummy_nlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
                              Index& nnz_h_lag, IndexStyleEnum& index_style)
 {
   // The problem described in hs071_NLP.hpp has 4 variables, x[0] through x[3]
-  n = 100;
+  n = bControl.getM();
 
   // one equality constraint and one inequality constraint
   m = 0;
@@ -35,8 +35,6 @@ bool OCdummy_nlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
 {
   // here, the n and m we gave IPOPT in get_nlp_info are passed back to us.
   // If desired, we could assert to make sure they are what we think they are.
-  assert(n == 100);
-  assert(m == 0);
 
   // the variables have no lower bounds
   for (Index i=0; i<n; i++)
@@ -45,9 +43,6 @@ bool OCdummy_nlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
   // the variables have no upper bounds
   for (Index i=0; i<n; i++)
     x_u[i] = 2e19;
-
-  x_l[0] = x_u[0] = cstart;
-  x_l[n-1] = x_u[n-1] = cend;
 
   return true;
 }
@@ -65,8 +60,8 @@ bool OCdummy_nlp::get_starting_point(Index n, bool init_x, Number* x,
   assert(init_lambda == false);
 
   // initialize to the given starting point
-  for (Index i=0; i<n; i++)
-    x[i] = 0.1*i;
+  auto c = bControl.getCArray();
+  std::copy(c.begin(), c.end(), x);
 
   return true;
 }
@@ -75,9 +70,10 @@ bool OCdummy_nlp::eval_f(Index n, const Number* x, bool new_x, Number& obj_value
 {
 
   std::vector<double> input;
-  input.insert(input.end(), x, x+n);
+  input.assign(x,x+n);
+  bControl.setCArray(input);
 
-  obj_value = optControlProb.getCost(control(input));
+  obj_value = optControlProb.getCost(bControl);
 
   return true;
 }
@@ -85,9 +81,10 @@ bool OCdummy_nlp::eval_f(Index n, const Number* x, bool new_x, Number& obj_value
 bool OCdummy_nlp::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
 {
   std::vector<double> input;
-  input.insert(input.end(), x, x+n);
+  input.assign(x,x+n);
+  bControl.setCArray(input);
 
-  auto grad = optControlProb.getAnalyticGradient(control(input));
+  auto grad = optControlProb.getAnalyticGradient(bControl);
 
   std::copy(grad.second.begin(), grad.second.end(), grad_f);
 

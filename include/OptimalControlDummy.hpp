@@ -3,6 +3,7 @@
 
 #include "IpIpoptApplication.hpp"
 #include "itensor/all.h"
+#include "ControlBasis.hpp"
 #include <vector>
 #include <math.h>
 #include <iterator>
@@ -25,6 +26,10 @@ public:
   double getCost(const vec& control);
   vecpair getAnalyticGradient(const vec& control);
   vecpair getNumericGradient(const vec& control);
+
+  double getCost(const ControlBasis& bControl);
+  vecpair getAnalyticGradient(const ControlBasis& bControl);
+  vecpair getNumericGradient(const ControlBasis& bControl);
 
 };
 
