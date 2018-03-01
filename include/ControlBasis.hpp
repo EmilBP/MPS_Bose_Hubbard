@@ -18,7 +18,7 @@ private:
   vec c;
   mat f;
   double dt;
-  size_t M;
+  size_t M, N;
 
 
 public:
@@ -26,6 +26,8 @@ public:
 
   vec getCArray() const;
   size_t getM() const;
+  size_t getN() const;
+  double getFij(size_t i, size_t j) const;
   void setCArray(const vec& cArray);
   vec convControl() const;
   vec convGrad(const vec& gradu) const;

@@ -85,7 +85,7 @@ int main(){
   double cstart = 2;
   double cend   = 7;
 
-  std::vector<double> weights = {5.5 , -1.2 , -6.3 , 0.3};
+  std::vector<double> weights = {5.5 , 1.2 , 6.3 , 0.3};
   // auto data = matchControlGradients(weights,tstep,cstart,cend,T);
   // printData(data);
 
