@@ -1,15 +1,15 @@
-#include "OCdummy_nlp.hpp"
+#include "OCBoseHubbard_nlp.hpp"
 
 // constructor
-OCdummy_nlp::OCdummy_nlp(OptimalControlDummy& optControlProb, ControlBasis& bControl)
+OCBoseHubbard_nlp::OCBoseHubbard_nlp(OC_BH& optControlProb, ControlBasis& bControl)
  : optControlProb(optControlProb), bControl(bControl) {}
 
 //destructor
-OCdummy_nlp::~OCdummy_nlp()
+OCBoseHubbard_nlp::~OCBoseHubbard_nlp()
 {}
 
-bool OCdummy_nlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                             Index& nnz_h_lag, IndexStyleEnum& index_style)
+bool OCBoseHubbard_nlp::get_nlp_info(Ipopt::Index& n, Ipopt::Index& m, Ipopt::Index& nnz_jac_g,
+                             Ipopt::Index& nnz_h_lag, IndexStyleEnum& index_style)
 {
   // The problem described has M variables
   n = bControl.getM();
@@ -30,24 +30,24 @@ bool OCdummy_nlp::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
   return true;
 }
 
-bool OCdummy_nlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
-                                Index m, Number* g_l, Number* g_u)
+bool OCBoseHubbard_nlp::get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u,
+                                Ipopt::Index m, Number* g_l, Number* g_u)
 {
   // here, the n and m we gave IPOPT in get_nlp_info are passed back to us.
   // If desired, we could assert to make sure they are what we think they are.
 
   // the variables have no lower bounds
-  for (Index i = 0; i < n; i++)
-    x_l[i] = -2e19;
+  for (Ipopt::Index i = 0; i < n; i++)
+    x_l[i] = -5;
 
   // the variables have no upper bounds
-  for (Index i = 0; i < n; i++)
-    x_u[i] = 2e19;
+  for (Ipopt::Index i = 0; i < n; i++)
+    x_u[i] = 5;
 
 
-  double Umin = -2;
-  double Umax = 20;
-  for (Index i = 0; i < bControl.getN(); i++) {
+  double Umin = 2;
+  double Umax = 50;
+  for (Ipopt::Index i = 0; i < bControl.getN(); i++) {
     g_l[i] = Umin;
     g_u[i] = Umax;
   }
@@ -55,9 +55,9 @@ bool OCdummy_nlp::get_bounds_info(Index n, Number* x_l, Number* x_u,
   return true;
 }
 
-bool OCdummy_nlp::get_starting_point(Index n, bool init_x, Number* x,
+bool OCBoseHubbard_nlp::get_starting_point(Ipopt::Index n, bool init_x, Number* x,
                                    bool init_z, Number* z_L, Number* z_U,
-                                   Index m, bool init_lambda,
+                                   Ipopt::Index m, bool init_lambda,
                                    Number* lambda)
 {
   // Here, we assume we only have starting values for x, if you code
@@ -74,7 +74,7 @@ bool OCdummy_nlp::get_starting_point(Index n, bool init_x, Number* x,
   return true;
 }
 
-bool OCdummy_nlp::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
+bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Number& obj_value)
 {
 
   std::vector<double> input;
@@ -86,7 +86,7 @@ bool OCdummy_nlp::eval_f(Index n, const Number* x, bool new_x, Number& obj_value
   return true;
 }
 
-bool OCdummy_nlp::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
+bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x, Number* grad_f)
 {
   std::vector<double> input;
   input.assign(x,x+n);
@@ -99,7 +99,7 @@ bool OCdummy_nlp::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad
   return true;
 }
 
-bool OCdummy_nlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
+bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipopt::Index m, Number* g)
 {
   auto u = bControl.convControl();
   std::copy(u.begin(), u.end(), g);
@@ -107,8 +107,8 @@ bool OCdummy_nlp::eval_g(Index n, const Number* x, bool new_x, Index m, Number* 
   return true;
 }
 
-bool OCdummy_nlp::eval_jac_g(Index n, const Number* x, bool new_x,
-                           Index m, Index nele_jac, Index* iRow, Index *jCol,
+bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
+                           Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index* iRow, Ipopt::Index *jCol,
                            Number* values)
 {
   if (values == NULL) {
@@ -134,9 +134,9 @@ bool OCdummy_nlp::eval_jac_g(Index n, const Number* x, bool new_x,
   return true;
 }
 
-void OCdummy_nlp::finalize_solution(SolverReturn status,
-                                  Index n, const Number* x, const Number* z_L,
-                                  const Number* z_U, Index m, const Number* g,
+void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
+                                  Ipopt::Index n, const Number* x, const Number* z_L,
+                                  const Number* z_U, Ipopt::Index m, const Number* g,
                                   const Number* lambda, Number obj_value,
                                   const IpoptData* ip_data, IpoptCalculatedQuantities* ip_cq)
 {
@@ -145,22 +145,23 @@ void OCdummy_nlp::finalize_solution(SolverReturn status,
 
   // For this example, we write the solution to the console
   printf("\n\nSolution of the primal variables, x\n");
-  for (Index i=0; i<n; i++) {
+  for (Ipopt::Index i=0; i<n; i++) {
     printf("x[%d] = %e\n", i, x[i]);
   }
 
   printf("\n\nSolution of the bound multipliers, z_L and z_U\n");
-  for (Index i=0; i<n; i++) {
+  for (Ipopt::Index i=0; i<n; i++) {
     printf("z_L[%d] = %e\n", i, z_L[i]);
   }
-  for (Index i=0; i<n; i++) {
+  for (Ipopt::Index i=0; i<n; i++) {
     printf("z_U[%d] = %e\n", i, z_U[i]);
   }
 
   printf("\n\nObjective value\n");
   printf("f(x*) = %e\n", obj_value);
 
-  std::ofstream myfile ("TestSolution.txt");
+  std::string filename = "BHSolution_M" + std::to_string(n) + ".txt";
+  std::ofstream myfile (filename);
   if (myfile.is_open())
   {
     for (Index i=0; i<n; i++) {

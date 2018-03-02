@@ -5,6 +5,8 @@
 #include "OptimalControlDummy.hpp"
 #include "ControlBasis.hpp"
 #include <assert.h>
+#include <string>
+#include <fstream>
 
 using namespace Ipopt;
 

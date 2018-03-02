@@ -1,4 +1,5 @@
 #include "OCdummy_nlp.hpp"
+#include "OCBoseHubbard_nlp.hpp"
 #include "OptimalControlDummy.hpp"
 #include "OptimalControl.hpp"
 #include "ControlBasisFactory.hpp"
@@ -179,13 +180,136 @@ void testCBsinusParametrization(double tstep, double T, size_t M){
   saveData(f,name2);
 }
 
+int runTestIpopt(double tstep, double T){
+  std::vector<double> weights = {0 , 0 , 1};
+  // auto data = matchControlGradients(weights,tstep,cstart,cend,T);
+  // printData(data);
+
+  auto OCD      = OptimalControlDummy(weights,tstep);
+  // auto u0       = linspace(0,10,T/tstep+1);
+  std::vector<double> u0(T/tstep+1 , 0);
+  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,10);
+
+
+  // Create a new instance of your nlp
+  //  (use a SmartPtr, not raw)
+  SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,bControl);
+
+  // Create a new instance of IpoptApplication
+  //  (use a SmartPtr, not raw)
+  // We are using the factory, since this allows us to compile this
+  // example with an Ipopt Windows DLL
+  SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+
+  // Change some options
+  // Note: The following choices are only examples, they might not be
+  //       suitable for your optimization problem.
+  app->Options()->SetNumericValue("tol", 1e-9);
+  app->Options()->SetStringValue("mu_strategy", "adaptive");
+  app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+  app->Options()->SetStringValue("output_file", "testfile.txt");
+
+  // Intialize the IpoptApplication and process the options
+  ApplicationReturnStatus status;
+  status = app->Initialize();
+  if (status != Solve_Succeeded) {
+    printf("\n\n*** Error during initialization!\n");
+    return (int) status;
+  }
+
+  // Ask Ipopt to solve the problem
+  status = app->OptimizeTNLP(mynlp);
+
+  if (status == Solve_Succeeded) {
+    printf("\n\n*** The problem solved!\n");
+  }
+  else {
+    printf("\n\n*** The problem FAILED!\n");
+  }
+
+  // As the SmartPtrs go out of scope, the reference count
+  // will be decremented and the objects will automatically
+  // be deleted.
+}
+
+
+void runBHTestIpopt(double tstep, double T){
+  // matrix results;
+
+  int N         = 5;
+  int Npart     = 5;
+  int locDim    = 5;
+  double J      = 1.0;
+  double U_i    = 2.0;
+  double U_f    = 40;
+  int M         = 8;
+
+  auto sites    = Boson(N,locDim);
+  auto psi_i    = InitializeState(sites,Npart,J,U_i);
+  auto psi_f    = InitializeState(sites,Npart,J,U_f);
+
+  auto H_BH     = HamiltonianBH(sites,J,tstep,0);
+  auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
+
+  auto c        = randomVec(-5,5,M);
+  auto u0       = linspace(U_i,U_f,T/tstep+1);
+  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,c.size());
+  bControl.setCArray(c);
+
+
+  // Create a new instance of your nlp
+  //  (use a SmartPtr, not raw)
+  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl);
+
+  // Create a new instance of IpoptApplication
+  //  (use a SmartPtr, not raw)
+  // We are using the factory, since this allows us to compile this
+  // example with an Ipopt Windows DLL
+  SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+
+  // Change some options
+  // Note: The following choices are only examples, they might not be
+  //       suitable for your optimization problem.
+  app->Options()->SetNumericValue("tol", 1e-8);
+  app->Options()->SetStringValue("mu_strategy", "adaptive");
+  app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+  app->Options()->SetStringValue("output_file", "logfile_BH.txt");
+
+
+  // Intialize the IpoptApplication and process the options
+  ApplicationReturnStatus status;
+  status = app->Initialize();
+  if (status != Solve_Succeeded) {
+    printf("\n\n*** Error during initialization!\n");
+    return ;
+  }
+
+  // Ask Ipopt to solve the problem
+  status = app->OptimizeTNLP(mynlp);
+
+  if (status == Solve_Succeeded) {
+    printf("\n\n*** The problem solved!\n");
+  }
+  else {
+    printf("\n\n*** The problem FAILED!\n");
+  }
+
+  // As the SmartPtrs go out of scope, the reference count
+  // will be decremented and the objects will automatically
+  // be deleted.
+
+  // auto t = generateRange(0,tstep,T);
+  // std::vector<double> u_opt;
+  // input.assign(x,x+n);
+}
+
 
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 1;
-  double cstart = 2;
-  double cend   = 7;
+  double T      = 5;
+
 
   // std::vector<int> Ms = {1, 3, 5, 7};
   // srand ((unsigned)time(NULL));
@@ -193,63 +317,15 @@ int main(){
   //   testCBsinusParametrization(tstep,T,M);
   // }
 
-  std::vector<size_t> Ms = {5,10,15,20,25};
-  srand ((unsigned)time(NULL));
-  for (auto& M : Ms){
-    auto data = matchControlGradientsBH(tstep,T,M);
-    std::string name = "ControlGradients_tstep001_M" + std::to_string(M) + ".txt";
-    saveData(data,name);
-  }
-
-
-  // std::vector<double> weights = {5.5 , 1.2 , 6.3 , 0.3};
-  // // auto data = matchControlGradients(weights,tstep,cstart,cend,T);
-  // // printData(data);
-  //
-  // auto OCD      = OptimalControlDummy(weights,tstep);
-  // auto u0       = linspace(0,10,T/tstep+1);
-  // auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,10);
-  //
-  //
-  // // Create a new instance of your nlp
-  // //  (use a SmartPtr, not raw)
-  // SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,bControl);
-  //
-  // // Create a new instance of IpoptApplication
-  // //  (use a SmartPtr, not raw)
-  // // We are using the factory, since this allows us to compile this
-  // // example with an Ipopt Windows DLL
-  // SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-  //
-  // // Change some options
-  // // Note: The following choices are only examples, they might not be
-  // //       suitable for your optimization problem.
-  // app->Options()->SetNumericValue("tol", 1e-9);
-  // app->Options()->SetStringValue("mu_strategy", "adaptive");
-  // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-  //
-  // // Intialize the IpoptApplication and process the options
-  // ApplicationReturnStatus status;
-  // status = app->Initialize();
-  // if (status != Solve_Succeeded) {
-  //   printf("\n\n*** Error during initialization!\n");
-  //   return (int) status;
+  // std::vector<size_t> Ms = {5,10,15,20,25};
+  // srand ((unsigned)time(NULL));
+  // for (auto& M : Ms){
+  //   auto data = matchControlGradientsBH(tstep,T,M);
+  //   std::string name = "ControlGradients_tstep001_M" + std::to_string(M) + ".txt";
+  //   saveData(data,name);
   // }
-  //
-  // // Ask Ipopt to solve the problem
-  // status = app->OptimizeTNLP(mynlp);
-  //
-  // if (status == Solve_Succeeded) {
-  //   printf("\n\n*** The problem solved!\n");
-  // }
-  // else {
-  //   printf("\n\n*** The problem FAILED!\n");
-  // }
-  //
-  // // As the SmartPtrs go out of scope, the reference count
-  // // will be decremented and the objects will automatically
-  // // be deleted.
 
+  runBHTestIpopt(tstep,T);
 
   return 0;
 }
