@@ -219,6 +219,27 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::getNumericGradient(const Contro
   return std::make_pair(cost,g);
 }
 
+template<class TimeStepper, class Hamiltonian>
+vec OptimalControl<TimeStepper,Hamiltonian>::getFidelityForAllT(const vec& control){
+
+  std::vector<double> fid;
+  fid.reserve(control.size());
+  calcPsi(control);
+
+  double re, im;
+  for (size_t i = 0; i < control.size(); i++) {
+    overlap(psi_target,psi_t.at(i),re,im);
+    fid.push_back(re*re+im*im);
+  }
+
+  return fid;
+}
+
+template<class TimeStepper, class Hamiltonian>
+vec OptimalControl<TimeStepper,Hamiltonian>::getFidelityForAllT(const ControlBasis& bControl){
+  return getFidelityForAllT(bControl.convControl());
+}
+
 template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDfast,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDnew,HamiltonianBH>;

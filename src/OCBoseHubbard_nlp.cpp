@@ -38,15 +38,15 @@ bool OCBoseHubbard_nlp::get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u
 
   // the variables have no lower bounds
   for (Ipopt::Index i = 0; i < n; i++)
-    x_l[i] = -5;
+    x_l[i] = -8;
 
   // the variables have no upper bounds
   for (Ipopt::Index i = 0; i < n; i++)
-    x_u[i] = 5;
+    x_u[i] = 8;
 
 
   double Umin = 2;
-  double Umax = 50;
+  double Umax = 100;
   for (Ipopt::Index i = 0; i < bControl.getN(); i++) {
     g_l[i] = Umin;
     g_u[i] = Umax;
@@ -160,12 +160,21 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
   printf("\n\nObjective value\n");
   printf("f(x*) = %e\n", obj_value);
 
+
+  // write U-basis solution to file
+  std::vector<double> solution;
+  solution.assign(x,x+n);
+  bControl.setCArray(solution);
+  auto u  = bControl.convControl();
+  auto f  = optControlProb.getFidelityForAllT(bControl);
+
   std::string filename = "BHSolution_M" + std::to_string(n) + ".txt";
   std::ofstream myfile (filename);
   if (myfile.is_open())
   {
-    for (Index i=0; i<n; i++) {
-      myfile << x[i] << "\n";
+    for (int i = 0; i < u.size(); i++) {
+      myfile << u.at(i) << "\t";
+      myfile << f.at(i) << "\n";
     }
     myfile.close();
   }

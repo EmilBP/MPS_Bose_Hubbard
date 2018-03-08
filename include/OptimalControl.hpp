@@ -42,6 +42,8 @@ public:
   double getCost(const ControlBasis& bControl);
   vecpair getAnalyticGradient(const ControlBasis& bControl);
   vecpair getNumericGradient(const ControlBasis& bControl);
+  vec getFidelityForAllT(const vec& control);
+  vec getFidelityForAllT(const ControlBasis& bControl);
 
   vecpair checkCostPlusFidelity(const vec& control);
 };

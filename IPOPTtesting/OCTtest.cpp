@@ -241,8 +241,9 @@ void runBHTestIpopt(double tstep, double T){
   int locDim    = 5;
   double J      = 1.0;
   double U_i    = 2.0;
-  double U_f    = 40;
-  int M         = 8;
+  double U_f    = 50;
+  int M         = 6;
+  double gamma  = 1e-9;
 
   auto sites    = Boson(N,locDim);
   auto psi_i    = InitializeState(sites,Npart,J,U_i);
@@ -250,13 +251,26 @@ void runBHTestIpopt(double tstep, double T){
 
   auto H_BH     = HamiltonianBH(sites,J,tstep,0);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
-  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
 
   auto c        = randomVec(-5,5,M);
   auto u0       = linspace(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,c.size());
   bControl.setCArray(c);
 
+  std::string filename = "BHSolution_M" + std::to_string(M) + "initial.txt";
+  auto u_i = bControl.convControl();
+  auto f_i = OC.getFidelityForAllT(bControl);
+  std::ofstream myfile (filename);
+  if (myfile.is_open())
+  {
+    for (int i = 0; i < u_i.size(); i++) {
+      myfile << u_i.at(i) << "\t";
+      myfile << f_i.at(i) << "\n";
+    }
+    myfile.close();
+  }
+  else std::cout << "Unable to open file\n";
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
@@ -271,7 +285,7 @@ void runBHTestIpopt(double tstep, double T){
   // Change some options
   // Note: The following choices are only examples, they might not be
   //       suitable for your optimization problem.
-  app->Options()->SetNumericValue("tol", 1e-8);
+  app->Options()->SetNumericValue("tol", 1e-9);
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
   app->Options()->SetStringValue("output_file", "logfile_BH.txt");
@@ -298,17 +312,13 @@ void runBHTestIpopt(double tstep, double T){
   // As the SmartPtrs go out of scope, the reference count
   // will be decremented and the objects will automatically
   // be deleted.
-
-  // auto t = generateRange(0,tstep,T);
-  // std::vector<double> u_opt;
-  // input.assign(x,x+n);
 }
 
 
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 5;
+  double T      = 6;
 
 
   // std::vector<int> Ms = {1, 3, 5, 7};

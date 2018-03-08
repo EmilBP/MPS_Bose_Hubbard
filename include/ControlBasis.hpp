@@ -24,10 +24,10 @@ private:
 public:
   ControlBasis(vec& u0, vec& S, mat& f, double dt);
 
-  vec getCArray() const;
   size_t getM() const;
   size_t getN() const;
   double getFij(size_t i, size_t j) const;
+  vec getCArray() const;
   void setCArray(const vec& cArray);
   vec convControl() const;
   vec convGrad(const vec& gradu) const;

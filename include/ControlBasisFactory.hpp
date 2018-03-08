@@ -42,14 +42,19 @@ std::vector<double> ControlBasisFactory::sigmoid(std::vector<double>& x, double 
 ControlBasis ControlBasisFactory::buildCBsin(std::vector<double>& u0, double tstep, double T, size_t M){
   assert( u0.size()-(1 + T/tstep) < 1e-5 );
   auto x    = linspace(0,100,u0.size());
-  auto S    = sigmoid(x,1.0,6);
+  auto S    = sigmoid(x,3.0,2.5);
+  auto S2   = sigmoid(x,-3.0,100-2.5);
+
+  for (size_t i = S.size()/2; i < S.size(); i++) {
+    S.at(i) = S2.at(i);
+  }
   S.front() = 0;
   S.back()  = 0;
 
   std::vector<std::vector<double> > f;
   for (size_t i = 0; i < u0.size(); i++) {
     std::vector<double> fi;
-    for (size_t n = 0; n < M; n++) {
+    for (size_t n = 1; n <= M; n++) {
       fi.push_back( sin(n*PI*tstep*i/T) );
     }
     f.push_back(fi);
