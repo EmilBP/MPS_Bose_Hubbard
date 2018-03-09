@@ -3,6 +3,7 @@
 #include "OptimalControlDummy.hpp"
 #include "OptimalControl.hpp"
 #include "ControlBasisFactory.hpp"
+#include "SeedGenerator.hpp"
 #include "IpIpoptApplication.hpp"
 #include "itensor/all.h"
 #include "boson.h"
@@ -12,6 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string>
+#include "gnuplot-iostream.h"
 
 using namespace itensor;
 using namespace Ipopt;
@@ -242,8 +244,8 @@ void runBHTestIpopt(double tstep, double T){
   double J      = 1.0;
   double U_i    = 2.0;
   double U_f    = 50;
-  int M         = 6;
-  double gamma  = 1e-9;
+  int M         = 10;
+  double gamma  = 0;
 
   auto sites    = Boson(N,locDim);
   auto psi_i    = InitializeState(sites,Npart,J,U_i);
@@ -253,10 +255,8 @@ void runBHTestIpopt(double tstep, double T){
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
 
-  auto c        = randomVec(-5,5,M);
-  auto u0       = linspace(U_i,U_f,T/tstep+1);
-  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,c.size());
-  bControl.setCArray(c);
+  auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
+  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
 
   std::string filename = "BHSolution_M" + std::to_string(M) + "initial.txt";
   auto u_i = bControl.convControl();
@@ -314,11 +314,63 @@ void runBHTestIpopt(double tstep, double T){
   // be deleted.
 }
 
+void testSeeds(size_t Ntries){
+  int N         = 5;
+  int Npart     = 5;
+  int locDim    = 5;
+  double J      = 1.0;
+  double U_i    = 2.0;
+  double U_f    = 50;
+  int M         = 6;
+  double gamma  = 0;
+  double tstep  = 1e-2;
+  double T      = 5;
+
+  auto sites    = Boson(N,locDim);
+  auto psi_i    = InitializeState(sites,Npart,J,U_i);
+  auto psi_f    = InitializeState(sites,Npart,J,U_f);
+  auto H_BH     = HamiltonianBH(sites,J,tstep,0);
+  auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
+
+  auto times    = generateRange(0,tstep,T);
+  double cbest  = 1;
+  std::vector<double> ubest;
+
+  srand ((unsigned)time(NULL));
+  for (size_t i = 0; i < Ntries; i++) {
+    std::cout << "Seed trial nr. " << i+1 << '\n';
+    auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
+    auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
+    auto cost     = OC.getCost(bControl);
+    std::cout << "Resulting cost: " << cost << "\n\n";
+
+    if (cost < cbest) {
+      cbest = cost;
+      ubest = u0;
+    }
+  }
+
+  std::cout << "BEST COST: " << cbest << '\n';
+
+  std::vector< std::pair<double,double> > data;
+  for (size_t i = 0; i < ubest.size(); i++) {
+    data.push_back(std::make_pair(times.at(i),ubest.at(i)));
+  }
+
+  Gnuplot gp;
+  gp << "set xlabel 't'\n";
+  gp << "set ylabel 'u0'\n";
+  gp << "plot"
+  << gp.file1d(data) << "with lines,"
+  << std::endl;
+
+}
 
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 6;
+  double T      = 3;
 
 
   // std::vector<int> Ms = {1, 3, 5, 7};
@@ -335,7 +387,10 @@ int main(){
   //   saveData(data,name);
   // }
 
+  srand ((unsigned)time(NULL));
   runBHTestIpopt(tstep,T);
+
+  // testSeeds(100);
 
   return 0;
 }

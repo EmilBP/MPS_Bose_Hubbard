@@ -2,6 +2,11 @@
 #define OCBOSEHUBBARD_NLP_HPP
 
 #include "IpTNLP.hpp"
+#include "IpIpoptCalculatedQuantities.hpp"
+#include "IpIpoptData.hpp"
+#include "IpTNLPAdapter.hpp"
+#include "IpOrigIpoptNLP.hpp"
+
 #include "OptimalControl.hpp"
 #include "ControlBasis.hpp"
 #include "TimeStepperTEBDfast.hpp"
@@ -18,6 +23,7 @@ class OCBoseHubbard_nlp : public TNLP
 private:
   OC_BH optControlProb;
   ControlBasis bControl;
+  std::vector< std::vector<double> > controlCache;;
 
 public:
   /** default constructor */
@@ -54,6 +60,16 @@ public:
                                  const Number* lambda, Number obj_value,
                                  const IpoptData* ip_data,
                                  IpoptCalculatedQuantities* ip_cq);
+
+  virtual bool intermediate_callback(AlgorithmMode mode,
+                               Ipopt::Index iter, Number obj_value,
+                               Number inf_pr, Number inf_du,
+                               Number mu, Number d_norm,
+                               Number regularization_size,
+                               Number alpha_du, Number alpha_pr,
+                               Ipopt::Index ls_trials,
+                               const IpoptData* ip_data,
+                               IpoptCalculatedQuantities* ip_cq);
 
 };
 

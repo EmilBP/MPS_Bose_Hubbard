@@ -38,14 +38,14 @@ bool OCBoseHubbard_nlp::get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u
 
   // the variables have no lower bounds
   for (Ipopt::Index i = 0; i < n; i++)
-    x_l[i] = -8;
+    x_l[i] = -10;
 
   // the variables have no upper bounds
   for (Ipopt::Index i = 0; i < n; i++)
-    x_u[i] = 8;
+    x_u[i] = 10;
 
 
-  double Umin = 2;
+  double Umin = 1.8;
   double Umax = 100;
   for (Ipopt::Index i = 0; i < bControl.getN(); i++) {
     g_l[i] = Umin;
@@ -179,4 +179,47 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
     myfile.close();
   }
   else std::cout << "Unable to open file\n";
+
+  std::string filename2 = "BHcache_M" + std::to_string(n) + ".txt";
+  std::ofstream myfile2 (filename2);
+  if (myfile2.is_open())
+  {
+    for (auto& row : controlCache){
+      for (auto& val : row) {
+        myfile2 << val << "\t";
+      }
+      myfile2 << "\n";
+    }
+    myfile2.close();
+  }
+  else std::cout << "Unable to open file\n";
+}
+
+bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
+                                              Ipopt::Index iter, Number obj_value,
+                                              Number inf_pr, Number inf_du,
+                                              Number mu, Number d_norm,
+                                              Number regularization_size,
+                                              Number alpha_du, Number alpha_pr,
+                                              Ipopt::Index ls_trials,
+                                              const IpoptData* ip_data,
+                                              IpoptCalculatedQuantities* ip_cq)
+{
+  Ipopt::TNLPAdapter* tnlp_adapter = NULL;
+  if( ip_cq != NULL ){
+    Ipopt::OrigIpoptNLP* orignlp;
+    orignlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ip_cq->GetIpoptNLP()));
+    if( orignlp != NULL ){
+      tnlp_adapter = dynamic_cast<TNLPAdapter*>(GetRawPtr(orignlp->nlp()));
+    }
+  }
+
+  double* primals = new double[bControl.getM()];
+  tnlp_adapter->ResortX(*ip_data->curr()->x(), primals);
+
+  std::vector<double> cvals;
+  cvals.assign(primals,primals+bControl.getM());
+  controlCache.push_back(cvals);
+
+  return true;
 }
