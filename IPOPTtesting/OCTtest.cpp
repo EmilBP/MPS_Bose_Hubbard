@@ -168,7 +168,7 @@ void testCBsinusParametrization(double tstep, double T, size_t M){
 
   std::vector<double> S,u;
   std::vector<std::vector<double> > f;
-  bControl.exportParameters(u,u0,S,c,f);
+  // bControl.exportParameters(u,u0,S,c,f);
 
   matrix USdata;
   USdata.push_back(u);
@@ -258,6 +258,8 @@ void runBHTestIpopt(double tstep, double T){
   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
 
+  std::cout << "/* message */" << '\n';
+
   std::string filename = "BHSolution_M" + std::to_string(M) + "initial.txt";
   auto u_i = bControl.convControl();
   auto f_i = OC.getFidelityForAllT(bControl);
@@ -271,6 +273,9 @@ void runBHTestIpopt(double tstep, double T){
     myfile.close();
   }
   else std::cout << "Unable to open file\n";
+
+  std::cout << "/* message */" << '\n';
+
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)

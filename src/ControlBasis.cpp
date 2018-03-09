@@ -1,13 +1,14 @@
 #include "ControlBasis.hpp"
 
-ControlBasis::ControlBasis(vec& u0, vec& S, mat& f, double dt)
-  : u0(u0), S(S), f(f), dt(dt), M(f.front().size()), N(u0.size()), controlIndex(0) {
+ControlBasis::ControlBasis(arma::vec& u0, arma::vec& S, arma::mat& f, double dt)
+  : u0(u0), S(S), f(f), ft(f.t()), dt(dt), M(f.n_cols), N(u0.size()) {
 
-  c = std::vector<double>(M,0);
+  c = arma::zeros<arma::vec>(M);
 }
 
-vec ControlBasis::getCArray() const{
-  return c;
+stdvec ControlBasis::getCArray() const{
+  // return as std::vec
+  return arma::conv_to< stdvec >::from(c);
 }
 
 size_t ControlBasis::getM() const{
@@ -18,60 +19,43 @@ size_t ControlBasis::getN() const{
   return N;
 }
 
-size_t ControlBasis::getControlIndex() const{
-  return controlIndex;
-}
-
 double ControlBasis::getFij(size_t i, size_t j) const{
-  return (f.at(i)).at(j);
+  return f(i,j);
 }
 
-void ControlBasis::setCArray(const vec& cArray){
-  c = cArray;
-  controlIndex++;
-}
-
-vec ControlBasis::convControl() const{
-  vec u = u0;
-  auto Si = S.begin();
-  auto fi = f.begin();
-
-  for (auto& ui : u){
-    auto cn = c.begin();
-    double sum = 0;
-
-    for (auto& fn : (*fi) ){
-      sum += fn*(*cn++);
-    }
-
-    ui += (*Si)*sum;
-
-    fi++; Si++;
-  }
-  return u;
-}
-
-vec ControlBasis::convGrad(const vec& gradu) const{
-  vec gc;
-  gc.reserve(M);
-
-  for (size_t n = 0; n < M; n++) {
-    double gc_n = 0;
-
-    for (size_t i = 0; i < gradu.size(); i++) {
-      gc_n += gradu.at(i)*S.at(i)*(f.at(i)).at(n);
-    }
-    gc.push_back(gc_n);
-  }
-  return gc;
-
+void ControlBasis::fmat2array(double* array) {
+  // return f as a single, long array double*
+  // uses transpose as arma::mat stored as columns, but Ipopt takes rows
+  array = ft.memptr();
 }
 
 
-void ControlBasis::exportParameters(vec& u_, vec& u0_, vec& S_, vec& c_, mat& f_){
-  u_  = convControl();
-  u0_ = u0;
-  S_  = S;
-  c_  = c;
-  f_  = f;
+void ControlBasis::setCArray(const stdvec& cVec){
+  // convert std::vec input to arma::vec member
+  c = arma::conv_to< arma::vec >::from(cVec);
+}
+
+void ControlBasis::setCArray(const double* cArray, size_t size) {
+  // convert double* input to arma::vec member
+  c = arma::vec(cArray, size);
+}
+
+stdvec ControlBasis::convControl() const{
+  // u = u0 + S*sum(fn*cn)
+  // convert output to std::vec
+  return arma::conv_to< stdvec >::from( u0+S%(f*c) );
+}
+
+void ControlBasis::convControl(double* u, size_t size) {
+  // calculate  arma::vec u and return as double*
+  arma::vec uv = u0+S%(f*c);
+  u = uv.memptr();
+}
+
+
+stdvec ControlBasis::convGrad(const stdvec& gradu) const{
+  // convert std::vec input to arma::vec for faster calculations
+  // convert back to std::vec and return
+  arma::vec G = arma::conv_to< arma::vec >::from(gradu);
+  return arma::conv_to< stdvec >::from( ft*(G%S) );
 }

@@ -4,63 +4,57 @@
 #include "ControlBasis.hpp"
 #include <vector>
 #include <assert.h>
+#include <armadillo>
 #include "math.h"
 
 #define PI 3.14159265
+typedef std::vector<double> stdvec;
 
 class ControlBasisFactory{
 
 private:
-  static std::vector<double> linspace(double a, double b, int n);
-  static std::vector<double> sigmoid(std::vector<double>& x, double k, double offset);
+  static arma::vec sigmoid(arma::vec& x, double k, double offset);
 
 public:
 
-  static ControlBasis buildCBsin(std::vector<double>& u0, double tstep, double T, size_t M);
+  static ControlBasis buildCBsin(stdvec& u0, double tstep, double T, size_t M);
 
 };
 
-std::vector<double> ControlBasisFactory::linspace(double a, double b, int n){
-  std::vector<double> array;
-  double step = (b-a) / (n-1);
+arma::vec ControlBasisFactory::sigmoid(arma::vec& x, double k, double offset){
+  arma::vec S = x;
 
-  while(a <= b + 1e-7) {
-      array.push_back(a);
-      a += step;           // could recode to better handle rounding errors
-  }
-  return array;
-}
+  S.for_each(
+      [&](double& si) {
+        si = 1.0/(1+exp(-k*(si-offset)));
+      }
+    );
 
-std::vector<double> ControlBasisFactory::sigmoid(std::vector<double>& x, double k, double offset){
-  std::vector<double> S;
-  for (auto& xval : x){
-    S.push_back(1.0/(1+exp(-k*(xval-offset))));
-  }
   return S;
 }
 
-ControlBasis ControlBasisFactory::buildCBsin(std::vector<double>& u0, double tstep, double T, size_t M){
-  assert( u0.size()-(1 + T/tstep) < 1e-5 );
-  auto x    = linspace(0,100,u0.size());
-  auto S    = sigmoid(x,12.0,0.8);
-  auto S2   = sigmoid(x,-12,100-0.8);
+ControlBasis ControlBasisFactory::buildCBsin(stdvec& u0, double tstep, double T, size_t M){
+  size_t N = u0.size();
+  assert( N-(1 + T/tstep) < 1e-5 );
+  arma::vec x    = arma::linspace<arma::vec>(0,100,N);
+  arma::vec S    = sigmoid(x,12.0,0.8);
+  arma::vec S2   = sigmoid(x,-12,100-0.8);
 
-  for (size_t i = S.size()/2; i < S.size(); i++) {
-    S.at(i) = S2.at(i);
+  for (size_t i = S.n_rows/2; i < S.n_rows; i++) {
+    S(i) = S2(i);
   }
-  S.front() = 0;
-  S.back()  = 0;
+  S(0)          = 0;
+  S(S.n_rows-1) = 0;
 
-  std::vector<std::vector<double> > f;
-  for (size_t i = 0; i < u0.size(); i++) {
-    std::vector<double> fi;
+  arma::mat f(N,M);
+  for (size_t i = 0; i < N; i++) {
     for (size_t n = 1; n <= M; n++) {
-      fi.push_back( sin(n*PI*tstep*i/T) );
+      f(i,n-1) = sin(n*PI*tstep*i/T);
     }
-    f.push_back(fi);
   }
 
-  return ControlBasis(u0,S,f,tstep);
+  arma::vec u0a = arma::conv_to< arma::vec >::from(u0);
+  return ControlBasis(u0a,S,f,tstep);
 }
 
 

@@ -77,9 +77,9 @@ bool OCBoseHubbard_nlp::get_starting_point(Ipopt::Index n, bool init_x, Number* 
 bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Number& obj_value)
 {
 
-  std::vector<double> input;
-  input.assign(x,x+n);
-  bControl.setCArray(input);
+  // std::vector<double> input;
+  // input.assign(x,x+n);
+  bControl.setCArray(x,n);
 
   obj_value = optControlProb.getCost(bControl);
 
@@ -88,9 +88,9 @@ bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Numb
 
 bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x, Number* grad_f)
 {
-  std::vector<double> input;
-  input.assign(x,x+n);
-  bControl.setCArray(input);
+  // std::vector<double> input;
+  // input.assign(x,x+n);
+  bControl.setCArray(x,n);
 
   auto grad = optControlProb.getAnalyticGradient(bControl);
 
@@ -101,8 +101,10 @@ bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x,
 
 bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipopt::Index m, Number* g)
 {
-  auto u = bControl.convControl();
-  std::copy(u.begin(), u.end(), g);
+  // auto u = bControl.convControl();
+  // std::copy(u.begin(), u.end(), g);
+
+  bControl.convControl(g,m);
 
   return true;
 }
@@ -123,12 +125,12 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
   }
   else {
     // return the values of the Jacobian of the constraints
-    // BE CAREFUL WITH m/2
-    for (size_t i = 0; i < m; i++) { // t_i
-      for (size_t j = 0; j < n; j++) { // c_j
-        values[n*i+j] = bControl.getFij(i,j);
-      }
-    }
+    // for (size_t i = 0; i < m; i++) { // t_i
+    //   for (size_t j = 0; j < n; j++) { // c_j
+    //     values[n*i+j] = bControl.getFij(i,j);
+    //   }
+    // }
+    bControl.fmat2array(values);
   }
 
   return true;

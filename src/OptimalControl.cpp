@@ -6,7 +6,7 @@
 
 template<class TimeStepper, class Hamiltonian>
 OptimalControl<TimeStepper,Hamiltonian>::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, Hamiltonian& hamil, double gamma)
-  : psi_target(psi_target), psi_init(psi_init), gamma(gamma), timeStepper(timeStepper), hamil(hamil), tstep(timeStepper.getTstep()), lastControlIndex(1e5) {
+  : psi_target(psi_target), psi_init(psi_init), gamma(gamma), timeStepper(timeStepper), hamil(hamil), tstep(timeStepper.getTstep()) {
 
 }
 
@@ -40,15 +40,6 @@ template<class TimeStepper, class Hamiltonian>
 double OptimalControl<TimeStepper,Hamiltonian>::getCost(const vec& control){
 
   return 0.5*(1-getFidelity(control)) + getRegularisation(control);
-}
-
-template<class TimeStepper, class Hamiltonian>
-double OptimalControl<TimeStepper,Hamiltonian>::getPreCost(const vec& control){
-
-  double re, im;
-  overlap(psi_target,psi_t.back(),re,im);
-
-  return 0.5*(1-re*re+im*im) + getRegularisation(control);
 }
 
 template<class TimeStepper, class Hamiltonian>
@@ -194,17 +185,12 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::checkCostPlusFidelity(const vec
 template<class TimeStepper, class Hamiltonian>
 double OptimalControl<TimeStepper,Hamiltonian>::getCost(const ControlBasis& bControl){
 
-  if (lastControlIndex == bControl.getControlIndex()) {
-    return getPreCost(bControl.convControl() );
-  } else {
-    return getCost(bControl.convControl() );
-  }
+  return getCost(bControl.convControl());
 }
 
 template<class TimeStepper, class Hamiltonian>
 vecpair OptimalControl<TimeStepper,Hamiltonian>::getAnalyticGradient(const ControlBasis& bControl){
 
-  lastControlIndex = bControl.getControlIndex();
   auto result = getAnalyticGradient(bControl.convControl());
   return std::make_pair(result.first,bControl.convGrad(result.second));
 }
