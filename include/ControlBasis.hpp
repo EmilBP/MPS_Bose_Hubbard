@@ -18,7 +18,7 @@ private:
   vec c;
   mat f;
   double dt;
-  size_t M, N;
+  size_t M, N, controlIndex;
 
 
 public:
@@ -26,6 +26,7 @@ public:
 
   size_t getM() const;
   size_t getN() const;
+  size_t getControlIndex() const;
   double getFij(size_t i, size_t j) const;
   vec getCArray() const;
   void setCArray(const vec& cArray);

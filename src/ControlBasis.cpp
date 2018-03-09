@@ -1,7 +1,7 @@
 #include "ControlBasis.hpp"
 
 ControlBasis::ControlBasis(vec& u0, vec& S, mat& f, double dt)
-  : u0(u0), S(S), f(f), dt(dt), M(f.front().size()), N(u0.size()) {
+  : u0(u0), S(S), f(f), dt(dt), M(f.front().size()), N(u0.size()), controlIndex(0) {
 
   c = std::vector<double>(M,0);
 }
@@ -18,12 +18,17 @@ size_t ControlBasis::getN() const{
   return N;
 }
 
+size_t ControlBasis::getControlIndex() const{
+  return controlIndex;
+}
+
 double ControlBasis::getFij(size_t i, size_t j) const{
   return (f.at(i)).at(j);
 }
 
 void ControlBasis::setCArray(const vec& cArray){
   c = cArray;
+  controlIndex++;
 }
 
 vec ControlBasis::convControl() const{

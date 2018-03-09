@@ -21,6 +21,7 @@ private:
   Hamiltonian& hamil;
   double gamma, tstep;
   IQMPS psi_target, psi_init;
+  size_t lastControlIndex;
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
@@ -36,6 +37,7 @@ public:
   OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, Hamiltonian& hamil, double gamma);
 
   double getCost(const vec& control);
+  double getPreCost(const vec& control);
   vecpair getAnalyticGradient(const vec& control);
   vecpair getNumericGradient(const vec& control);
 
