@@ -23,7 +23,8 @@ class OCBoseHubbard_nlp : public TNLP
 private:
   OC_BH optControlProb;
   ControlBasis bControl;
-  std::vector< std::vector<double> > controlCache;;
+  std::vector< std::vector<double> > controlCache;
+  std::vector<double> costCache;
 
 public:
   /** default constructor */

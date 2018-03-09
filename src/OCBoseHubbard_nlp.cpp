@@ -180,7 +180,7 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
   }
   else std::cout << "Unable to open file\n";
 
-  std::string filename2 = "BHcache_M" + std::to_string(n) + ".txt";
+  std::string filename2 = "ControlCache_M" + std::to_string(n) + ".txt";
   std::ofstream myfile2 (filename2);
   if (myfile2.is_open())
   {
@@ -191,6 +191,17 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
       myfile2 << "\n";
     }
     myfile2.close();
+  }
+  else std::cout << "Unable to open file\n";
+
+  std::string filename3 = "CostCache_M" + std::to_string(n) + ".txt";
+  std::ofstream myfile3 (filename3);
+  if (myfile3.is_open())
+  {
+    for (auto& val : costCache){
+      myfile3 << val << "\n";
+    }
+    myfile3.close();
   }
   else std::cout << "Unable to open file\n";
 }
@@ -205,21 +216,24 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
                                               const IpoptData* ip_data,
                                               IpoptCalculatedQuantities* ip_cq)
 {
-  Ipopt::TNLPAdapter* tnlp_adapter = NULL;
-  if( ip_cq != NULL ){
-    Ipopt::OrigIpoptNLP* orignlp;
-    orignlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ip_cq->GetIpoptNLP()));
-    if( orignlp != NULL ){
-      tnlp_adapter = dynamic_cast<TNLPAdapter*>(GetRawPtr(orignlp->nlp()));
-    }
-  }
+  // Ipopt::TNLPAdapter* tnlp_adapter = NULL;
+  // if( ip_cq != NULL ){
+  //   Ipopt::OrigIpoptNLP* orignlp;
+  //   orignlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ip_cq->GetIpoptNLP()));
+  //   if( orignlp != NULL ){
+  //     tnlp_adapter = dynamic_cast<TNLPAdapter*>(GetRawPtr(orignlp->nlp()));
+  //   }
+  // }
+  //
+  // double* primals = new double[bControl.getM()];
+  // tnlp_adapter->ResortX(*ip_data->curr()->x(), primals);
+  //
+  // std::vector<double> cvals;
+  // cvals.assign(primals,primals+bControl.getM());
+  // bControl.setCArray(cvals);
 
-  double* primals = new double[bControl.getM()];
-  tnlp_adapter->ResortX(*ip_data->curr()->x(), primals);
-
-  std::vector<double> cvals;
-  cvals.assign(primals,primals+bControl.getM());
-  controlCache.push_back(cvals);
+  controlCache.push_back(bControl.convControl());
+  costCache.push_back(obj_value);
 
   return true;
 }
