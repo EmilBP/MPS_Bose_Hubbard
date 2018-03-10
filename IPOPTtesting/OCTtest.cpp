@@ -244,7 +244,7 @@ void runBHTestIpopt(double tstep, double T){
   double J      = 1.0;
   double U_i    = 2.0;
   double U_f    = 50;
-  int M         = 5;
+  int M         = 8;
   double gamma  = 0;
 
   auto sites    = Boson(N,locDim);
@@ -258,7 +258,6 @@ void runBHTestIpopt(double tstep, double T){
   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
 
-  std::cout << "/* message */" << '\n';
 
   std::string filename = "BHSolution_M" + std::to_string(M) + "initial.txt";
   auto u_i = bControl.convControl();
@@ -273,8 +272,6 @@ void runBHTestIpopt(double tstep, double T){
     myfile.close();
   }
   else std::cout << "Unable to open file\n";
-
-  std::cout << "/* message */" << '\n';
 
 
   // Create a new instance of your nlp
@@ -375,7 +372,7 @@ void testSeeds(size_t Ntries){
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 1;
+  double T      = 4;
 
 
   // std::vector<int> Ms = {1, 3, 5, 7};

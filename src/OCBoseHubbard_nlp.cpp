@@ -104,7 +104,7 @@ bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipop
   // auto u = bControl.convControl();
   // std::copy(u.begin(), u.end(), g);
 
-  bControl.convControl(g,m);
+  bControl.convControl(g);
 
   return true;
 }
@@ -132,9 +132,9 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
     //   }
     // }
 
-    for (Ipopt::Index i=0; i<n*m; i++) {
-      printf("val[%d] = %e\n", i, values[i]);
-    }
+    // for (Ipopt::Index i=0; i<n*m; i++) {
+    //   printf("val[%d] = %e\n", i, values[i]);
+    // }
 
   }
 

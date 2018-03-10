@@ -33,7 +33,7 @@ public:
   void setCArray(const stdvec& cVec);
   void setCArray(const double* cArray, size_t size);
   stdvec convControl() const;
-  void convControl(double* u, size_t size);
+  void convControl(double* u);
   stdvec convGrad(const stdvec& gradu) const;
 
 };

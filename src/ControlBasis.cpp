@@ -26,8 +26,12 @@ double ControlBasis::getFij(size_t i, size_t j) const{
 void ControlBasis::fmat2array(double* array) {
   // return f as a single, long array double*
   // uses transpose as arma::mat stored as columns, but Ipopt takes rows
-  
-  array = ft.memptr();
+
+  double * farray = ft.memptr();
+
+  for (size_t i = 0; i < N*M; i++) {
+    array[i] = farray[i];
+  }
 }
 
 
@@ -47,10 +51,15 @@ stdvec ControlBasis::convControl() const{
   return arma::conv_to< stdvec >::from( u0+S%(f*c) );
 }
 
-void ControlBasis::convControl(double* u, size_t size) {
+void ControlBasis::convControl(double* u) {
   // calculate  arma::vec u and return as double*
   arma::vec uv = u0+S%(f*c);
-  u = uv.memptr();
+
+  double* up = uv.memptr();
+
+  for (int i=0; i<N; i++) {
+    u[i] = up[i];
+  }
 }
 
 
