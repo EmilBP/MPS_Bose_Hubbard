@@ -26,6 +26,7 @@ double ControlBasis::getFij(size_t i, size_t j) const{
 void ControlBasis::fmat2array(double* array) {
   // return f as a single, long array double*
   // uses transpose as arma::mat stored as columns, but Ipopt takes rows
+  
   array = ft.memptr();
 }
 

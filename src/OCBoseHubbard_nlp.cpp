@@ -45,7 +45,7 @@ bool OCBoseHubbard_nlp::get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u
     x_u[i] = 10;
 
 
-  double Umin = 1.8;
+  double Umin = 2;
   double Umax = 100;
   for (Ipopt::Index i = 0; i < bControl.getN(); i++) {
     g_l[i] = Umin;
@@ -125,13 +125,19 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
   }
   else {
     // return the values of the Jacobian of the constraints
+    bControl.fmat2array(values);
     // for (size_t i = 0; i < m; i++) { // t_i
     //   for (size_t j = 0; j < n; j++) { // c_j
     //     values[n*i+j] = bControl.getFij(i,j);
     //   }
     // }
-    bControl.fmat2array(values);
+
+    for (Ipopt::Index i=0; i<n*m; i++) {
+      printf("val[%d] = %e\n", i, values[i]);
+    }
+
   }
+
 
   return true;
 }

@@ -24,11 +24,9 @@ public:
 arma::vec ControlBasisFactory::sigmoid(arma::vec& x, double k, double offset){
   arma::vec S = x;
 
-  S.for_each(
-      [&](double& si) {
-        si = 1.0/(1+exp(-k*(si-offset)));
-      }
-    );
+  for (size_t i = 0; i < S.n_rows; i++) {
+    S(i) = 1.0/(1+exp(-k*(x(i)-offset) ) );
+  }
 
   return S;
 }

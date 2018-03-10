@@ -244,7 +244,7 @@ void runBHTestIpopt(double tstep, double T){
   double J      = 1.0;
   double U_i    = 2.0;
   double U_f    = 50;
-  int M         = 10;
+  int M         = 5;
   double gamma  = 0;
 
   auto sites    = Boson(N,locDim);
@@ -375,7 +375,7 @@ void testSeeds(size_t Ntries){
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 3;
+  double T      = 1;
 
 
   // std::vector<int> Ms = {1, 3, 5, 7};
