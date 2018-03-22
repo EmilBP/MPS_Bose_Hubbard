@@ -27,11 +27,9 @@ void ControlBasis::fmat2array(double* array) {
   // return f as a single, long array double*
   // uses transpose as arma::mat stored as columns, but Ipopt takes rows
 
-  double * farray = ft.memptr();
-
-  for (size_t i = 0; i < N*M; i++) {
-    array[i] = farray[i];
-  }
+  double* farray = ft.memptr();
+  std::copy(farray, farray+N, array);
+  
 }
 
 
@@ -54,12 +52,8 @@ stdvec ControlBasis::convControl() const{
 void ControlBasis::convControl(double* u) {
   // calculate  arma::vec u and return as double*
   arma::vec uv = u0+S%(f*c);
-
   double* up = uv.memptr();
-
-  for (int i=0; i<N; i++) {
-    u[i] = up[i];
-  }
+  std::copy(up, up+N, u);
 }
 
 
@@ -68,4 +62,18 @@ stdvec ControlBasis::convGrad(const stdvec& gradu) const{
   // convert back to std::vec and return
   arma::vec G = arma::conv_to< arma::vec >::from(gradu);
   return arma::conv_to< stdvec >::from( ft*(G%S) );
+}
+
+
+void ControlBasis::exportParameters(){
+  arma::mat vecdata = arma::join_horiz( u0+S%(f*c) , u0);
+  vecdata = arma::join_horiz(vecdata , S);
+
+  arma::mat matdata = arma::join_vert(f, c.t());
+
+  std::string filename1 = "CBsinVecdata_M" + std::to_string(M) + ".txt";
+  std::string filename2 = "CBsinMatdata_M" + std::to_string(M) + ".txt";
+
+  vecdata.save(filename1,arma::raw_ascii);
+  matdata.save(filename2,arma::raw_ascii);
 }

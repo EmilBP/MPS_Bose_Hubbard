@@ -5,6 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <armadillo>
+#include <string>
 
 typedef std::vector<double> stdvec;
 // using mat = std::vector<std::vector<double> >;
@@ -35,6 +36,8 @@ public:
   stdvec convControl() const;
   void convControl(double* u);
   stdvec convGrad(const stdvec& gradu) const;
+
+  void exportParameters();
 
 };
 

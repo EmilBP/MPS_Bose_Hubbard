@@ -166,20 +166,7 @@ void testCBsinusParametrization(double tstep, double T, size_t M){
 
   bControl.setCArray(c);
 
-  std::vector<double> S,u;
-  std::vector<std::vector<double> > f;
-  // bControl.exportParameters(u,u0,S,c,f);
-
-  matrix USdata;
-  USdata.push_back(u);
-  USdata.push_back(u0);
-  USdata.push_back(S);
-
-  f.push_back(c);
-  std::string name1 = "CBsinData_US_M" + std::to_string(M) + ".txt";
-  std::string name2 = "CBsinData_FC_M" + std::to_string(M) + ".txt";
-  saveData(USdata,name1);
-  saveData(f,name2);
+  bControl.exportParameters();
 }
 
 int runTestIpopt(double tstep, double T){
@@ -276,7 +263,7 @@ void runBHTestIpopt(double tstep, double T){
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl);
+  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,true);
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)
@@ -287,7 +274,7 @@ void runBHTestIpopt(double tstep, double T){
   // Change some options
   // Note: The following choices are only examples, they might not be
   //       suitable for your optimization problem.
-  app->Options()->SetNumericValue("tol", 1e-9);
+  app->Options()->SetNumericValue("tol", 1e-8);
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
   app->Options()->SetStringValue("output_file", "logfile_BH.txt");
