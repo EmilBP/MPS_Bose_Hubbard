@@ -2,6 +2,8 @@
 #define OPTIMALCONTROL_H
 
 #include "itensor/all.h"
+#include "ControlBasis.hpp"
+
 #include <vector>
 #include <iterator>
 #include <algorithm>
@@ -37,9 +39,13 @@ public:
   vecpair getAnalyticGradient(const vec& control);
   vecpair getNumericGradient(const vec& control);
 
+  double getCost(const ControlBasis& bControl);
+  vecpair getAnalyticGradient(const ControlBasis& bControl);
+  vecpair getNumericGradient(const ControlBasis& bControl);
+  vec getFidelityForAllT(const vec& control);
+  vec getFidelityForAllT(const ControlBasis& bControl);
+
   vecpair checkCostPlusFidelity(const vec& control);
-
-
 };
 
 #endif

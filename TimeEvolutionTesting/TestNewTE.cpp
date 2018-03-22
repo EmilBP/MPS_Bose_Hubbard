@@ -183,12 +183,12 @@ matchGradients(       SiteSet sites,
   auto times    = generateRange(0,tstep,T);
   auto control  = linspace(cstart,cend,times.size());
   auto Agrad    = OC.getAnalyticGradient(control);
-  auto Ngrad    = OC.getNumericGradient(control);
+  // auto Ngrad    = OC.getNumericGradient(control);
 
   for (size_t i = 0; i < Agrad.second.size(); i++) {
     std::vector<double> tmp;
     tmp.push_back(Agrad.second.at(i));
-    tmp.push_back(Ngrad.second.at(i));
+    // tmp.push_back(Ngrad.second.at(i));
     // tmp.push_back( abs(Agrad.second.at(i)-Ngrad.second.at(i)) );
 
     result.push_back(tmp);
@@ -464,7 +464,7 @@ testTimeEvolution( SiteSet sites,
 int main(){
   int N         = 5;
   int Npart     = 5;
-  int locDim    = 5;
+  int locDim    = 4;
 
   double J      = 1.0;
   double cstart = 3.0;
@@ -497,10 +497,10 @@ int main(){
   //  Match gradients
   //
   std::vector<double> tsteps;
-  tsteps.push_back(1e-2);
-  // tsteps.push_back(1e-3);
+  // tsteps.push_back(1e-2);
+  tsteps.push_back(1e-3);
 
-  for (size_t order = 0; order <= 0; order++) {
+  for (size_t order = 1; order <= 1; order++) {
     for (auto& dt : tsteps){
       auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
       std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";
