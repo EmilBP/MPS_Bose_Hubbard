@@ -4,9 +4,22 @@
 OCBoseHubbard_nlp::OCBoseHubbard_nlp(OC_BH& optControlProb, ControlBasis& bControl, bool cacheProgress)
  : optControlProb(optControlProb), bControl(bControl), cacheProgress(cacheProgress) {
 
-   if (cacheProgress){
-     IDstr = random_string(8);
+   IDstr = random_string(8);
+
+   std::string filename = "BHrampInitial_" + IDstr + ".txt";
+   auto u_i = bControl.convControl();
+   auto f_i = optControlProb.getFidelityForAllT(bControl);
+   std::ofstream myfile (filename);
+   if (myfile.is_open())
+   {
+     for (int i = 0; i < u_i.size(); i++) {
+       myfile << u_i.at(i) << "\t";
+       myfile << f_i.at(i) << "\n";
+     }
+     myfile.close();
    }
+   else std::cout << "Unable to open file\n";
+
  }
 
 //destructor
@@ -82,10 +95,7 @@ bool OCBoseHubbard_nlp::get_starting_point(Ipopt::Index n, bool init_x, Number* 
 bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Number& obj_value)
 {
 
-  // std::vector<double> input;
-  // input.assign(x,x+n);
   bControl.setCArray(x,n);
-
   obj_value = optControlProb.getCost(bControl);
 
   return true;
@@ -93,12 +103,9 @@ bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Numb
 
 bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x, Number* grad_f)
 {
-  // std::vector<double> input;
-  // input.assign(x,x+n);
+
   bControl.setCArray(x,n);
-
   auto grad = optControlProb.getAnalyticGradient(bControl);
-
   std::copy(grad.second.begin(), grad.second.end(), grad_f);
 
   return true;
@@ -106,8 +113,6 @@ bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x,
 
 bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipopt::Index m, Number* g)
 {
-  // auto u = bControl.convControl();
-  // std::copy(u.begin(), u.end(), g);
 
   bControl.convControl(g);
 
@@ -131,18 +136,7 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
   else {
     // return the values of the Jacobian of the constraints
     bControl.fmat2array(values);
-    // for (size_t i = 0; i < m; i++) { // t_i
-    //   for (size_t j = 0; j < n; j++) { // c_j
-    //     values[n*i+j] = bControl.getFij(i,j);
-    //   }
-    // }
-
-    // for (Ipopt::Index i=0; i<n*m; i++) {
-    //   printf("val[%d] = %e\n", i, values[i]);
-    // }
-
   }
-
 
   return true;
 }
@@ -181,7 +175,7 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
   auto u  = bControl.convControl();
   auto f  = optControlProb.getFidelityForAllT(bControl);
 
-  std::string filename = "BHSolution_M" + std::to_string(n) + ".txt";
+  std::string filename = "BHrampFinal_" + IDstr + ".txt";
   std::ofstream myfile (filename);
   if (myfile.is_open())
   {
@@ -205,7 +199,7 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
                                               const IpoptData* ip_data,
                                               IpoptCalculatedQuantities* ip_cq)
 {
-
+  // save current control and cost to file
   if (cacheProgress) {
 
     std::ofstream outfile;

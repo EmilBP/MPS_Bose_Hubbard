@@ -8,7 +8,6 @@
 #include <string>
 
 typedef std::vector<double> stdvec;
-// using mat = std::vector<std::vector<double> >;
 
 class ControlBasis{
   // control has form u(t_i) = u0(t_i) + S(t_i)*sum(c_1*f_1(t_i) + ... + c_M*f_M(t_i))
