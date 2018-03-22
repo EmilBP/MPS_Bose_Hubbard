@@ -21,7 +21,7 @@ int main(){
   srand ((unsigned)time(NULL));
 
   double tstep  = 1e-2;
-  double T      = 4;
+  double T      = 0.1;
 
   int N         = 5;
   int Npart     = 5;
@@ -47,7 +47,7 @@ int main(){
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,true);
+  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,false);
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)

@@ -28,8 +28,7 @@ void ControlBasis::fmat2array(double* array) {
   // uses transpose as arma::mat stored as columns, but Ipopt takes rows
 
   double* farray = ft.memptr();
-  std::copy(farray, farray+N, array);
-  
+  std::copy(farray, farray+N*M, array);
 }
 
 
