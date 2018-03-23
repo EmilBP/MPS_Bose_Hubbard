@@ -94,7 +94,6 @@ bool OCBoseHubbard_nlp::get_starting_point(Ipopt::Index n, bool init_x, Number* 
 
 bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Number& obj_value)
 {
-
   bControl.setCArray(x,n);
   obj_value = optControlProb.getCost(bControl);
 
@@ -103,7 +102,6 @@ bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Numb
 
 bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x, Number* grad_f)
 {
-
   bControl.setCArray(x,n);
   auto grad = optControlProb.getAnalyticGradient(bControl);
   std::copy(grad.second.begin(), grad.second.end(), grad_f);
@@ -113,7 +111,6 @@ bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x,
 
 bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipopt::Index m, Number* g)
 {
-
   bControl.convControl(g);
 
   return true;

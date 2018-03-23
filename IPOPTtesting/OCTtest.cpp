@@ -377,7 +377,9 @@ int main(){
   // }
 
   srand ((unsigned)time(NULL));
-  runBHTestIpopt(tstep,T);
+  // runBHTestIpopt(tstep,T);
+  auto data = matchControlGradientsBH(tstep, T , 8);
+  saveData(data,"matchGradientsArma.txt");
 
   // testSeeds(100);
 

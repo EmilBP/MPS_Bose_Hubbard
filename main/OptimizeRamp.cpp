@@ -21,7 +21,7 @@ int main(){
   srand ((unsigned)time(NULL));
 
   double tstep  = 1e-2;
-  double T      = 0.1;
+  double T      = 0.2;
 
   int N         = 5;
   int Npart     = 5;
