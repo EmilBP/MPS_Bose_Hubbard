@@ -91,4 +91,12 @@ inline Cplx expectationValue(SiteSet const& sites, IQMPS& psi, std::string const
   return (bra*op*ket).cplx();
 }
 
+inline std::vector<Cplx> expectationValues(SiteSet const& sites, IQMPS& psi, std::string const& opname){
+  std::vector<Cplx> expVals;
+  for (int i = 1; i <= sites.N(); i++) {
+    expVals.push_back( expectationValue(sites,psi,opname,i) );
+  }
+  return expVals;
+}
+
 #endif
