@@ -1,7 +1,6 @@
 #ifndef OPTIMALCONTROLDUMMY_H
 #define OPTIMALCONTROLDUMMY_H
 
-#include "IpIpoptApplication.hpp"
 #include "itensor/all.h"
 #include "ControlBasis.hpp"
 #include <vector>
