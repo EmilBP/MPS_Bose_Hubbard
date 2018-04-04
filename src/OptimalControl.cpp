@@ -242,6 +242,11 @@ vec OptimalControl<TimeStepper,Hamiltonian>::getFidelityForAllT(const ControlBas
   return getFidelityForAllT(bControl.convControl());
 }
 
+template<class TimeStepper, class Hamiltonian>
+std::vector<IQMPS> OptimalControl<TimeStepper,Hamiltonian>::getPsit() const{
+  return psi_t;
+}
+
 template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDfast,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDnew,HamiltonianBH>;

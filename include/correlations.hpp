@@ -53,7 +53,7 @@ inline Cplx correlationFunction(SiteSet const& sites, IQMPS& psi, std::string co
 
 inline ITensor correlationMatrix(SiteSet const& sites, IQMPS& psi, std::string const& opname1, std::string const& opname2){
   int N = sites.N();
-  Index rho_i("rho i",N),
+  itensor::Index rho_i("rho i",N),
         rho_j = prime(rho_i);
 
   ITensor rho(rho_i,rho_j);

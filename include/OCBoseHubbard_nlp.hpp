@@ -21,7 +21,7 @@ using OC_BH = OptimalControl<TimeStepperTEBDfast,HamiltonianBH>;
 class OCBoseHubbard_nlp : public TNLP
 {
 private:
-  OC_BH optControlProb;
+  OC_BH& optControlProb;
   ControlBasis bControl;
   bool cacheProgress;
 

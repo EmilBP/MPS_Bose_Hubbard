@@ -5,6 +5,7 @@
 #include "IpIpoptApplication.hpp"
 #include "itensor/all.h"
 #include "boson.h"
+#include "correlations.hpp"
 #include "HamiltonianBH.hpp"
 #include "TimeStepperTEBDfast.hpp"
 #include "InitializeState.hpp"
@@ -97,6 +98,25 @@ int main(){
   // As the SmartPtrs go out of scope, the reference count
   // will be decremented and the objects will automatically
   // be deleted.
+
+  // Extract psi for each t, evaluate expectation value
+  // of number operator, and save to file.
+  auto psi_t = OC.getPsit();
+  std::string filename = "ExpectationN.txt";
+  std::ofstream myfile (filename);
+  if (myfile.is_open())
+  {
+    for (auto& psi : psi_t){
+      auto expn = expectationValues(sites,psi,"N");
+      for (auto& val : expn){
+        myfile << val.real() << "\t";
+      }
+      myfile << "\n";
+    }
+    myfile.close();
+  }
+  else std::cout << "Unable to open file\n";
+
 
   return 0;
 }

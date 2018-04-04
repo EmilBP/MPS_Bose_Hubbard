@@ -45,6 +45,7 @@ public:
   vec getFidelityForAllT(const vec& control);
   vec getFidelityForAllT(const ControlBasis& bControl);
 
+  std::vector<IQMPS> getPsit() const;
   vecpair checkCostPlusFidelity(const vec& control);
 };
 

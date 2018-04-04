@@ -151,10 +151,10 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
 
   // write initial and final control to file
   bControl.setCArray(x,n); // set control to solution
-  auto u    = bControl.convControl();
   auto u_i  = bControl.getU0();
-  auto f    = optControlProb.getFidelityForAllT(bControl);
   auto f_i  = optControlProb.getFidelityForAllT(u_i);
+  auto u    = bControl.convControl();
+  auto f    = optControlProb.getFidelityForAllT(bControl);
 
   std::string filename = "BHrampInitialFinal.txt";
   std::ofstream myfile (filename);
