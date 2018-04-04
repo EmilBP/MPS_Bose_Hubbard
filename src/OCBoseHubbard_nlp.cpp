@@ -4,22 +4,6 @@
 OCBoseHubbard_nlp::OCBoseHubbard_nlp(OC_BH& optControlProb, ControlBasis& bControl, bool cacheProgress)
  : optControlProb(optControlProb), bControl(bControl), cacheProgress(cacheProgress) {
 
-   IDstr = random_string(8);
-
-   std::string filename = "BHrampInitial_" + IDstr + ".txt";
-   auto u_i = bControl.convControl();
-   auto f_i = optControlProb.getFidelityForAllT(bControl);
-   std::ofstream myfile (filename);
-   if (myfile.is_open())
-   {
-     for (int i = 0; i < u_i.size(); i++) {
-       myfile << u_i.at(i) << "\t";
-       myfile << f_i.at(i) << "\n";
-     }
-     myfile.close();
-   }
-   else std::cout << "Unable to open file\n";
-
  }
 
 //destructor
@@ -165,25 +149,26 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
   printf("f(x*) = %e\n", obj_value);
 
 
-  // write U-basis solution to file
-  std::vector<double> solution;
-  solution.assign(x,x+n);
-  bControl.setCArray(solution);
-  auto u  = bControl.convControl();
-  auto f  = optControlProb.getFidelityForAllT(bControl);
+  // write initial and final control to file
+  bControl.setCArray(x,n); // set control to solution
+  auto u    = bControl.convControl();
+  auto u_i  = bControl.getU0();
+  auto f    = optControlProb.getFidelityForAllT(bControl);
+  auto f_i  = optControlProb.getFidelityForAllT(u_i);
 
-  std::string filename = "BHrampFinal_" + IDstr + ".txt";
+  std::string filename = "BHrampInitialFinal.txt";
   std::ofstream myfile (filename);
   if (myfile.is_open())
   {
     for (int i = 0; i < u.size(); i++) {
+      myfile << u_i.at(i) << "\t";
+      myfile << f_i.at(i) << "\t";
       myfile << u.at(i) << "\t";
       myfile << f.at(i) << "\n";
     }
     myfile.close();
   }
   else std::cout << "Unable to open file\n";
-
 }
 
 bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
@@ -200,7 +185,7 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
   if (cacheProgress) {
 
     std::ofstream outfile;
-    std::string filename = "ControlCache_" + IDstr + ".txt";
+    std::string filename = "ControlCache.txt";
     outfile.open(filename, std::ios_base::app);
     if (outfile.is_open())
     {
@@ -217,20 +202,4 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
   }
 
   return true;
-}
-
-std::string OCBoseHubbard_nlp::random_string( size_t length )
-{
-    auto randchar = []() -> char
-    {
-        const char charset[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-        const size_t max_index = (sizeof(charset) - 1);
-        return charset[ rand() % max_index ];
-    };
-    std::string str(length,0);
-    std::generate_n( str.begin(), length, randchar );
-    return str;
 }

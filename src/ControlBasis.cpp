@@ -19,6 +19,11 @@ size_t ControlBasis::getN() const{
   return N;
 }
 
+stdvec ControlBasis::getU0() const{
+  // return as std::vec
+  return arma::conv_to< stdvec >::from(u0);
+}
+
 double ControlBasis::getFij(size_t i, size_t j) const{
   return f(i,j);
 }

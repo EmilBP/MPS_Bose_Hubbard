@@ -28,6 +28,7 @@ public:
   size_t getM() const;
   size_t getN() const;
   double getFij(size_t i, size_t j) const;
+  stdvec getU0() const;
   void fmat2array(double* array);
   stdvec getCArray() const;
   void setCArray(const stdvec& cVec);

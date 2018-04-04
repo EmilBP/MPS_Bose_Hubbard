@@ -23,14 +23,11 @@ class OCBoseHubbard_nlp : public TNLP
 private:
   OC_BH optControlProb;
   ControlBasis bControl;
-  std::string IDstr;
   bool cacheProgress;
 
 public:
   /** default constructor */
   OCBoseHubbard_nlp(OC_BH& optControlProb, ControlBasis& bControl, bool cacheProgress = false);
-
-  std::string random_string( size_t length );
 
   /** default destructor */
   virtual ~OCBoseHubbard_nlp();

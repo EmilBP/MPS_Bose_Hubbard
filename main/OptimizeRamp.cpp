@@ -18,6 +18,7 @@ using namespace Ipopt;
 
 int main(){
 
+
   srand ((unsigned)time(NULL));
 
   double tstep  = 1e-2;
@@ -34,6 +35,16 @@ int main(){
   int M         = 8;
   double gamma  = 0;
 
+  std::cout << "Performing optimal control of Bose-Hubbard model ... \n\n";
+  std::cout << " ***** Parameters used ***** \n";
+  std::cout << "Number of sites ...... " << N << "\n";
+  std::cout << "Number of particles ...... " << Npart << "\n";
+  std::cout << "Local Fock space dimension ...... " << locDim << "\n";
+  std::cout << "Control duration ...... " << T << "\n";
+  std::cout << "Time-step size ...... " << tstep << "\n";
+  std::cout << "GROUP dimension ...... " << M << "\n";
+  std::cout << "Gamma (regularisation factor) ...... " << gamma << "\n\n\n";
+
   auto sites    = Boson(N,locDim);
   auto psi_i    = InitializeState(sites,Npart,J,U_i);
   auto psi_f    = InitializeState(sites,Npart,J,U_f);
@@ -44,6 +55,7 @@ int main(){
 
   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
+
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
