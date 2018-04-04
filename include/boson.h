@@ -35,11 +35,20 @@ class BosonSiteSet : public SiteSet
         SiteSet::init(std::move(sites));
         }
 
-    void
-    read(std::istream& s)
-        {
-        SiteSet::readType<SiteType>(s);
+    void read(std::istream& s) {
+      int N = itensor::read<int>(s);
+
+      if(N > 0) {
+        auto store = SiteStore(N);
+        for(int j = 1; j <= N; ++j) {
+          auto I = IQIndex{};
+          I.read(s);
+          int d = I.nblock()-1;
+          store.set(j,SiteType(I,d));
         }
+        SiteSet::init(std::move(store));
+      }
+    }
 
   };
 
@@ -55,6 +64,8 @@ class BosonSite {
   BosonSite() { }
 
   BosonSite(IQIndex I) : s(I) { }
+
+  BosonSite(IQIndex I, int d) : s(I) , d(d) { }
 
   BosonSite(int n, int d)
    : d(d) {
