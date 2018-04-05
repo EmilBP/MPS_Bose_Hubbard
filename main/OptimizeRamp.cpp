@@ -17,40 +17,50 @@ using namespace itensor;
 using namespace Ipopt;
 
 
-int main(){
+int main(int argc, char* argv[]){
 
+  if(argc < 2) {
+    printfln("Usage: %s InputFile_BHcontrol",argv[0]);
+    return 0;
+  }
 
-  srand ((unsigned)time(NULL));
+  auto input    = InputGroup(argv[1],"input");
 
-  double tstep  = 1e-2;
-  double T      = 0.2;
+  double tstep  = input.getReal("tstep",1e-2);
+  double T      = input.getReal("T");
 
-  int N         = 5;
-  int Npart     = 5;
-  int locDim    = 5;
+  int N         = input.getInt("N");
+  int Npart     = input.getInt("Npart");
+  int locDim    = input.getInt("d");
 
   double J      = 1.0;
   double U_i    = 2.0;
   double U_f    = 50;
 
-  int M         = 8;
-  double gamma  = 0;
+  int M         = input.getInt("M");
+  double gamma  = input.getReal("gamma",0);
+  int seed      = input.getInt("seed",1);
+  int dHorder   = input.getInt("dHOrder",0);
+  bool cache    = input.getYesNo("cacheProgress",false);
+
+  srand ((unsigned) seed*time(NULL));
+
 
   std::cout << "Performing optimal control of Bose-Hubbard model ... \n\n";
-  std::cout << " ***** Parameters used ***** \n";
-  std::cout << "Number of sites ...... " << N << "\n";
-  std::cout << "Number of particles ...... " << Npart << "\n";
-  std::cout << "Local Fock space dimension ...... " << locDim << "\n";
-  std::cout << "Control duration ...... " << T << "\n";
-  std::cout << "Time-step size ...... " << tstep << "\n";
-  std::cout << "GROUP dimension ...... " << M << "\n";
-  std::cout << "Gamma (regularisation factor) ...... " << gamma << "\n\n\n";
+  std::cout << " ******* Parameters used ******* \n";
+  std::cout << "Number of sites ................ " << N << "\n";
+  std::cout << "Number of particles ............ " << Npart << "\n";
+  std::cout << "Local Fock space dimension ..... " << locDim << "\n";
+  std::cout << "Control duration ............... " << T << "\n";
+  std::cout << "Time-step size ................. " << tstep << "\n";
+  std::cout << "GROUP dimension ................ " << M << "\n";
+  std::cout << "Gamma (regularisation) ......... " << gamma << "\n\n\n";
 
   auto sites    = Boson(N,locDim);
   auto psi_i    = InitializeState(sites,Npart,J,U_i);
   auto psi_f    = InitializeState(sites,Npart,J,U_f);
 
-  auto H_BH     = HamiltonianBH(sites,J,tstep,0);
+  auto H_BH     = HamiltonianBH(sites,J,tstep,dHorder);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
 
@@ -60,7 +70,7 @@ int main(){
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,false);
+  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,cache);
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)
@@ -74,7 +84,7 @@ int main(){
   app->Options()->SetNumericValue("tol", 1e-8);
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-  app->Options()->SetStringValue("output_file", "logfile_BH.txt");
+  // app->Options()->SetStringValue("output_file", "logfile_BH.txt");
 
 
   // Intialize the IpoptApplication and process the options
