@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
   bool cache    = input.getYesNo("cacheProgress",false);
   int seed      = 1;
 
-  if(argc > 2) seed = argv[2];
+  if(argc > 2) seed = std::stoi(argv[2]);
   else printfln("Default seed used");
 
   srand ((unsigned) seed*time(NULL));
