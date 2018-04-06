@@ -39,9 +39,12 @@ int main(int argc, char* argv[]){
 
   int M         = input.getInt("M");
   double gamma  = input.getReal("gamma",0);
-  int seed      = input.getInt("seed",1);
   int dHorder   = input.getInt("dHOrder",0);
   bool cache    = input.getYesNo("cacheProgress",false);
+  int seed      = 1;
+
+  if(argc > 2) seed = argv[2];
+  else printfln("Default seed used");
 
   srand ((unsigned) seed*time(NULL));
 
@@ -54,7 +57,9 @@ int main(int argc, char* argv[]){
   std::cout << "Control duration ............... " << T << "\n";
   std::cout << "Time-step size ................. " << tstep << "\n";
   std::cout << "GROUP dimension ................ " << M << "\n";
-  std::cout << "Gamma (regularisation) ......... " << gamma << "\n\n\n";
+  std::cout << "Gamma (regularisation) ......... " << gamma << "\n";
+  std::cout << "Seed  .......................... " << seed << "\n\n\n";
+
 
   auto sites    = Boson(N,locDim);
   auto psi_i    = InitializeState(sites,Npart,J,U_i);
