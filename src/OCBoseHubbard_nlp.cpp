@@ -1,8 +1,9 @@
 #include "OCBoseHubbard_nlp.hpp"
 
 // constructor
-OCBoseHubbard_nlp::OCBoseHubbard_nlp(OC_BH& optControlProb, ControlBasis& bControl, bool cacheProgress)
- : optControlProb(optControlProb), bControl(bControl), cacheProgress(cacheProgress) {
+OCBoseHubbard_nlp::OCBoseHubbard_nlp(OC_BH& optControlProb, ControlBasis& bControl,
+                                    std::vector<double>& times, bool cacheProgress)
+ : optControlProb(optControlProb), bControl(bControl), times(times), cacheProgress(cacheProgress) {
 
  }
 
@@ -161,6 +162,7 @@ void OCBoseHubbard_nlp::finalize_solution(SolverReturn status,
   if (myfile.is_open())
   {
     for (int i = 0; i < u.size(); i++) {
+      myfile << times.at(i) << "\t";
       myfile << u_i.at(i) << "\t";
       myfile << f_i.at(i) << "\t";
       myfile << u.at(i) << "\t";

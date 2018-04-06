@@ -67,15 +67,15 @@ int main(int argc, char* argv[]){
 
   auto H_BH     = HamiltonianBH(sites,J,tstep,dHorder);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
-  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
+  auto times    = generateRange(0,tstep,T);
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH,gamma);
 
   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
 
-
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,cache);
+  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,times,cache);
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)
@@ -121,7 +121,9 @@ int main(int argc, char* argv[]){
   std::ofstream myfile (filename);
   if (myfile.is_open())
   {
+    size_t ind = 0;
     for (auto& psi : psi_t){
+      myfile << times.at(ind++) << "\t";
       auto expn = expectationValues(sites,psi,"N");
       for (auto& val : expn){
         myfile << val.real() << "\t";

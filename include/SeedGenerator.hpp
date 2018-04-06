@@ -11,12 +11,13 @@
 class SeedGenerator{
 
 private:
-  static std::vector<double> linspace(double a, double b, int n);
-  static std::vector<double> sigmoid(std::vector<double>& x, double k, double offset);
   static double randomDouble(double min, double max);
 
 public:
 
+  static std::vector<double> linspace(double a, double b, int n);
+  static std::vector<double> generateRange(double a, double b, double c);
+  static std::vector<double> sigmoid(std::vector<double>& x, double k, double offset);
   static std::vector<double> linsigmoidSeed(double u_start, double u_end, size_t length);
 
 };
@@ -30,6 +31,15 @@ std::vector<double> SeedGenerator::linspace(double a, double b, int n){
       a += step;           // could recode to better handle rounding errors
   }
   return array;
+}
+
+std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
+    std::vector<double> array;
+    while(a <= c + 1e-7) {
+        array.push_back(a);
+        a += b;         // could recode to better handle rounding errors
+    }
+    return array;
 }
 
 std::vector<double> SeedGenerator::sigmoid(std::vector<double>& x, double k, double offset){
