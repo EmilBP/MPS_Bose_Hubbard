@@ -81,9 +81,10 @@ double avgRuntime(T timestepper, int Nruns, std::vector<double> control, IQMPS p
 {
   std::vector<double> runtimes;
   for (size_t j = 0; j < Nruns; j++) {
+    auto psitmp = psi;
     clock_t begin = clock();
     for (size_t i = 0; i < control.size()-1; i++) {
-      timestepper.step(psi,control.at(i),control.at(i+1),true);
+      timestepper.step(psitmp,control.at(i),control.at(i+1),true);
     }
     clock_t end = clock();
     runtimes.push_back(double(end - begin) / CLOCKS_PER_SEC);
@@ -103,7 +104,7 @@ std::vector<double> compareSpeed(SiteSet sites, double dt, double T, int Nruns)
   std::vector<double> results;
 
   double cstart = 2.0;
-  double cend   = 40.0;
+  double cend   = 10.0;
   double J      = 1.0;
   int Npart     = sites.N();
 
@@ -112,12 +113,12 @@ std::vector<double> compareSpeed(SiteSet sites, double dt, double T, int Nruns)
   auto psi_i    = InitializeState(sites,Npart,J,cstart);
 
   auto TEBDold  = TimeStepperTEBD(sites,J,dt,{"Cutoff=",1E-8});
-  auto TEBDnew  = TimeStepperTEBDnew(sites,J,dt,{"Cutoff=",1E-8});
+  // auto TEBDnew  = TimeStepperTEBDnew(sites,J,dt,{"Cutoff=",1E-8});
   auto TEBDfast = TimeStepperTEBDfast(sites,J,dt,{"Cutoff=",1E-8});
   auto tMPO     = TimeStepperMPO(sites,J,dt,{"Cutoff=",1E-8});
 
   results.emplace_back( avgRuntime(TEBDold, Nruns, control, psi_i) );
-  results.emplace_back( avgRuntime(TEBDnew, Nruns, control, psi_i) );
+  // results.emplace_back( avgRuntime(TEBDnew, Nruns, control, psi_i) );
   results.emplace_back( avgRuntime(TEBDfast, Nruns, control, psi_i) );
   results.emplace_back( avgRuntime(tMPO, Nruns, control, psi_i) );
 
@@ -127,7 +128,7 @@ std::vector<double> compareSpeed(SiteSet sites, double dt, double T, int Nruns)
 
 int main(){
 
-  std::vector<int> Nvec = {5,6,7,8,9,10,11,12};
+  std::vector<int> Nvec = {5,6,7,8,9,10,11};
   double T    = 1.0;
   double dt   = 1e-2;
   int Nruns   = 5;
@@ -145,7 +146,7 @@ int main(){
 
     runtimeData1.emplace_back( compareSpeed(sites1,dt,T,Nruns) );
     runtimeData2.emplace_back( compareSpeed(sites2,dt,T,Nruns) );
-    
+
     std::cout << "Finished all runs for N = " << N << '\n';
   }
 
