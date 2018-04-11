@@ -18,6 +18,7 @@ private:
   arma::vec c;
   arma::mat f;
   arma::mat ft;
+  arma::mat constraints;
   double dt;
   size_t M, N;
 
@@ -29,7 +30,7 @@ public:
   size_t getN() const;
   double getFij(size_t i, size_t j) const;
   stdvec getU0() const;
-  void fmat2array(double* array);
+  void getConstraintJacobian(double* array);
   stdvec getCArray() const;
   void setCArray(const stdvec& cVec);
   void setCArray(const double* cArray, size_t size);

@@ -3,7 +3,8 @@
 ControlBasis::ControlBasis(arma::vec& u0, arma::vec& S, arma::mat& f, double dt)
   : u0(u0), S(S), f(f), ft(f.t()), dt(dt), M(f.n_cols), N(u0.size()) {
 
-  c = arma::zeros<arma::vec>(M);
+  constraints = (arma::diagmat(S)*f).t();
+  c           = arma::zeros<arma::vec>(M);
 }
 
 stdvec ControlBasis::getCArray() const{
@@ -28,10 +29,10 @@ double ControlBasis::getFij(size_t i, size_t j) const{
   return f(i,j);
 }
 
-void ControlBasis::fmat2array(double* array) {
+void ControlBasis::getConstraintJacobian(double* array) {
   // return f as a single, long array double*
   // uses transpose as arma::mat stored as columns, but Ipopt takes rows
-  double* farray = ft.memptr();
+  double* farray = constraints.memptr();
   std::copy(farray, farray+N*M, array);
 }
 

@@ -117,7 +117,7 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
   }
   else {
     // return the values of the Jacobian of the constraints
-    bControl.fmat2array(values);
+    bControl.getConstraintJacobian(values);
   }
 
   return true;
