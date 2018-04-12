@@ -187,17 +187,21 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
   if (cacheProgress) {
 
     std::ofstream outfile;
-    std::string filename = "ControlCache.txt";
+    std::string filename = "ProgressCache.txt";
     outfile.open(filename, std::ios_base::app);
     if (outfile.is_open())
     {
       auto control = bControl.convControl();
 
+      outfile << iter << "\t";
+      outfile << obj_value << "\t";
+      outfile << times.back() << "\t";
+
       for (auto& u : control) {
         outfile << u << "\t";
       }
+      outfile << "\n";
 
-      outfile << obj_value << "\n";
     }
     else std::cout << "Unable to open file\n";
 
