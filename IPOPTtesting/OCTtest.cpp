@@ -1,10 +1,8 @@
-#include "OCdummy_nlp.hpp"
+#include "IpIpoptApplication.hpp"
 #include "OCBoseHubbard_nlp.hpp"
-#include "OptimalControlDummy.hpp"
 #include "OptimalControl.hpp"
 #include "ControlBasisFactory.hpp"
 #include "SeedGenerator.hpp"
-#include "IpIpoptApplication.hpp"
 #include "itensor/all.h"
 #include "boson.h"
 #include "HamiltonianBH.hpp"
@@ -20,15 +18,15 @@ using namespace Ipopt;
 
 using matrix = std::vector< std::vector<double> >;
 
-std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
-    std::vector<double> array;
-    while(a <= c + 1e-7) {
-        array.push_back(a);
-        a += b;         // could recode to better handle rounding errors
-    }
-    return array;
-}
-
+// std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
+//     std::vector<double> array;
+//     while(a <= c + 1e-7) {
+//         array.push_back(a);
+//         a += b;         // could recode to better handle rounding errors
+//     }
+//     return array;
+// }
+//
 std::vector<double> linspace(double a, double b, int n) {
     std::vector<double> array;
     double step = (b-a) / (n-1);
@@ -78,45 +76,45 @@ void saveData(const matrix& data, const std::string filename){
 }
 
 
-matrix matchGradients(std::vector<double> weights, double tstep, double cstart, double cend, double T) {
-  matrix result;
-
-  auto OCD      = OptimalControlDummy(weights,tstep);
-  auto times    = generateRange(0,tstep,T);
-  auto control  = linspace(cstart,cend,times.size());
-  auto Agrad    = OCD.getAnalyticGradient(control);
-  auto Ngrad    = OCD.getNumericGradient(control);
-
-  for (size_t i = 0; i < Agrad.second.size(); i++) {
-    std::vector<double> tmp;
-    tmp.push_back(Agrad.second.at(i));
-    tmp.push_back(Ngrad.second.at(i));
-    result.push_back(tmp);
-  }
-
-  return result;
-}
-
-matrix matchControlGradients(std::vector<double> weights, double tstep, double cstart, double cend, double T) {
-  matrix result;
-
-  auto OCD      = OptimalControlDummy(weights,tstep);
-  auto c        = linspace(cstart,cend,10);
-  auto u0       = linspace(0,10,T/tstep+1);
-  auto control  = ControlBasisFactory::buildCBsin(u0,tstep,T,c.size());
-
-  auto Agrad    = OCD.getAnalyticGradient(control);
-  auto Ngrad    = OCD.getNumericGradient(control);
-
-  for (size_t i = 0; i < Agrad.second.size(); i++) {
-    std::vector<double> tmp;
-    tmp.push_back(Agrad.second.at(i));
-    tmp.push_back(Ngrad.second.at(i));
-    result.push_back(tmp);
-  }
-
-  return result;
-}
+// matrix matchGradients(std::vector<double> weights, double tstep, double cstart, double cend, double T) {
+//   matrix result;
+//
+//   auto OCD      = OptimalControlDummy(weights,tstep);
+//   auto times    = generateRange(0,tstep,T);
+//   auto control  = linspace(cstart,cend,times.size());
+//   auto Agrad    = OCD.getAnalyticGradient(control);
+//   auto Ngrad    = OCD.getNumericGradient(control);
+//
+//   for (size_t i = 0; i < Agrad.second.size(); i++) {
+//     std::vector<double> tmp;
+//     tmp.push_back(Agrad.second.at(i));
+//     tmp.push_back(Ngrad.second.at(i));
+//     result.push_back(tmp);
+//   }
+//
+//   return result;
+// }
+//
+// matrix matchControlGradients(std::vector<double> weights, double tstep, double cstart, double cend, double T) {
+//   matrix result;
+//
+//   auto OCD      = OptimalControlDummy(weights,tstep);
+//   auto c        = linspace(cstart,cend,10);
+//   auto u0       = linspace(0,10,T/tstep+1);
+//   auto control  = ControlBasisFactory::buildCBsin(u0,tstep,T,c.size());
+//
+//   auto Agrad    = OCD.getAnalyticGradient(control);
+//   auto Ngrad    = OCD.getNumericGradient(control);
+//
+//   for (size_t i = 0; i < Agrad.second.size(); i++) {
+//     std::vector<double> tmp;
+//     tmp.push_back(Agrad.second.at(i));
+//     tmp.push_back(Ngrad.second.at(i));
+//     result.push_back(tmp);
+//   }
+//
+//   return result;
+// }
 
 matrix matchControlGradientsBH( double tstep, double T, size_t M) {
   matrix result;
@@ -126,15 +124,15 @@ matrix matchControlGradientsBH( double tstep, double T, size_t M) {
   double J      = 1.0;
 
   auto sites    = Boson(N,locDim);
-  auto psi_i    = InitializeState(sites,Npart,J,5.0);
-  auto psi_f    = InitializeState(sites,Npart,J,20.0);
+  auto psi_i    = InitializeState(sites,Npart,J,2.0);
+  auto psi_f    = InitializeState(sites,Npart,J,50.0);
 
   auto H_BH     = HamiltonianBH(sites,J,tstep,0);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
 
   auto c        = randomVec(-2,2,M);
-  auto u0       = linspace(5.0,20.0,T/tstep+1);
+  auto u0       = linspace(2.0,50.0,T/tstep+1);
   auto control  = ControlBasisFactory::buildCBsin(u0,tstep,T,c.size());
   control.setCArray(c);
 
@@ -169,139 +167,139 @@ void testCBsinusParametrization(double tstep, double T, size_t M){
   bControl.exportParameters();
 }
 
-int runTestIpopt(double tstep, double T){
-  std::vector<double> weights = {0 , 0 , 1};
-  // auto data = matchControlGradients(weights,tstep,cstart,cend,T);
-  // printData(data);
-
-  auto OCD      = OptimalControlDummy(weights,tstep);
-  // auto u0       = linspace(0,10,T/tstep+1);
-  std::vector<double> u0(T/tstep+1 , 0);
-  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,10);
-
-
-  // Create a new instance of your nlp
-  //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,bControl);
-
-  // Create a new instance of IpoptApplication
-  //  (use a SmartPtr, not raw)
-  // We are using the factory, since this allows us to compile this
-  // example with an Ipopt Windows DLL
-  SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-
-  // Change some options
-  // Note: The following choices are only examples, they might not be
-  //       suitable for your optimization problem.
-  app->Options()->SetNumericValue("tol", 1e-9);
-  app->Options()->SetStringValue("mu_strategy", "adaptive");
-  app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-  app->Options()->SetStringValue("output_file", "testfile.txt");
-
-  // Intialize the IpoptApplication and process the options
-  ApplicationReturnStatus status;
-  status = app->Initialize();
-  if (status != Solve_Succeeded) {
-    printf("\n\n*** Error during initialization!\n");
-    return (int) status;
-  }
-
-  // Ask Ipopt to solve the problem
-  status = app->OptimizeTNLP(mynlp);
-
-  if (status == Solve_Succeeded) {
-    printf("\n\n*** The problem solved!\n");
-  }
-  else {
-    printf("\n\n*** The problem FAILED!\n");
-  }
-
-  // As the SmartPtrs go out of scope, the reference count
-  // will be decremented and the objects will automatically
-  // be deleted.
-}
-
-
-void runBHTestIpopt(double tstep, double T){
-  // matrix results;
-
-  int N         = 5;
-  int Npart     = 5;
-  int locDim    = 5;
-  double J      = 1.0;
-  double U_i    = 2.0;
-  double U_f    = 50;
-  int M         = 8;
-  double gamma  = 0;
-
-  auto sites    = Boson(N,locDim);
-  auto psi_i    = InitializeState(sites,Npart,J,U_i);
-  auto psi_f    = InitializeState(sites,Npart,J,U_f);
-
-  auto H_BH     = HamiltonianBH(sites,J,tstep,0);
-  auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
-  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
-
-  auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
-  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
+// int runTestIpopt(double tstep, double T){
+//   std::vector<double> weights = {0 , 0 , 1};
+//   // auto data = matchControlGradients(weights,tstep,cstart,cend,T);
+//   // printData(data);
+//
+//   auto OCD      = OptimalControlDummy(weights,tstep);
+//   // auto u0       = linspace(0,10,T/tstep+1);
+//   std::vector<double> u0(T/tstep+1 , 0);
+//   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,10);
+//
+//
+//   // Create a new instance of your nlp
+//   //  (use a SmartPtr, not raw)
+//   SmartPtr<TNLP> mynlp = new OCdummy_nlp(OCD,bControl);
+//
+//   // Create a new instance of IpoptApplication
+//   //  (use a SmartPtr, not raw)
+//   // We are using the factory, since this allows us to compile this
+//   // example with an Ipopt Windows DLL
+//   SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+//
+//   // Change some options
+//   // Note: The following choices are only examples, they might not be
+//   //       suitable for your optimization problem.
+//   app->Options()->SetNumericValue("tol", 1e-9);
+//   app->Options()->SetStringValue("mu_strategy", "adaptive");
+//   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+//   app->Options()->SetStringValue("output_file", "testfile.txt");
+//
+//   // Intialize the IpoptApplication and process the options
+//   ApplicationReturnStatus status;
+//   status = app->Initialize();
+//   if (status != Solve_Succeeded) {
+//     printf("\n\n*** Error during initialization!\n");
+//     return (int) status;
+//   }
+//
+//   // Ask Ipopt to solve the problem
+//   status = app->OptimizeTNLP(mynlp);
+//
+//   if (status == Solve_Succeeded) {
+//     printf("\n\n*** The problem solved!\n");
+//   }
+//   else {
+//     printf("\n\n*** The problem FAILED!\n");
+//   }
+//
+//   // As the SmartPtrs go out of scope, the reference count
+//   // will be decremented and the objects will automatically
+//   // be deleted.
+// }
 
 
-  std::string filename = "BHSolution_M" + std::to_string(M) + "initial.txt";
-  auto u_i = bControl.convControl();
-  auto f_i = OC.getFidelityForAllT(bControl);
-  std::ofstream myfile (filename);
-  if (myfile.is_open())
-  {
-    for (int i = 0; i < u_i.size(); i++) {
-      myfile << u_i.at(i) << "\t";
-      myfile << f_i.at(i) << "\n";
-    }
-    myfile.close();
-  }
-  else std::cout << "Unable to open file\n";
-
-
-  // Create a new instance of your nlp
-  //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,true);
-
-  // Create a new instance of IpoptApplication
-  //  (use a SmartPtr, not raw)
-  // We are using the factory, since this allows us to compile this
-  // example with an Ipopt Windows DLL
-  SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-
-  // Change some options
-  // Note: The following choices are only examples, they might not be
-  //       suitable for your optimization problem.
-  app->Options()->SetNumericValue("tol", 1e-8);
-  app->Options()->SetStringValue("mu_strategy", "adaptive");
-  app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-  app->Options()->SetStringValue("output_file", "logfile_BH.txt");
-
-
-  // Intialize the IpoptApplication and process the options
-  ApplicationReturnStatus status;
-  status = app->Initialize();
-  if (status != Solve_Succeeded) {
-    printf("\n\n*** Error during initialization!\n");
-    return ;
-  }
-
-  // Ask Ipopt to solve the problem
-  status = app->OptimizeTNLP(mynlp);
-
-  if (status == Solve_Succeeded) {
-    printf("\n\n*** The problem solved!\n");
-  }
-  else {
-    printf("\n\n*** The problem FAILED!\n");
-  }
-
-  // As the SmartPtrs go out of scope, the reference count
-  // will be decremented and the objects will automatically
-  // be deleted.
-}
+// void runBHTestIpopt(double tstep, double T){
+//   // matrix results;
+//
+//   int N         = 5;
+//   int Npart     = 5;
+//   int locDim    = 5;
+//   double J      = 1.0;
+//   double U_i    = 2.0;
+//   double U_f    = 50;
+//   int M         = 8;
+//   double gamma  = 0;
+//
+//   auto sites    = Boson(N,locDim);
+//   auto psi_i    = InitializeState(sites,Npart,J,U_i);
+//   auto psi_f    = InitializeState(sites,Npart,J,U_f);
+//
+//   auto H_BH     = HamiltonianBH(sites,J,tstep,0);
+//   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
+//   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, gamma);
+//
+//   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
+//   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
+//
+//
+//   std::string filename = "BHSolution_M" + std::to_string(M) + "initial.txt";
+//   auto u_i = bControl.convControl();
+//   auto f_i = OC.getFidelityForAllT(bControl);
+//   std::ofstream myfile (filename);
+//   if (myfile.is_open())
+//   {
+//     for (int i = 0; i < u_i.size(); i++) {
+//       myfile << u_i.at(i) << "\t";
+//       myfile << f_i.at(i) << "\n";
+//     }
+//     myfile.close();
+//   }
+//   else std::cout << "Unable to open file\n";
+//
+//
+//   // Create a new instance of your nlp
+//   //  (use a SmartPtr, not raw)
+//   SmartPtr<TNLP> mynlp = new OCBoseHubbard_nlp(OC,bControl,true);
+//
+//   // Create a new instance of IpoptApplication
+//   //  (use a SmartPtr, not raw)
+//   // We are using the factory, since this allows us to compile this
+//   // example with an Ipopt Windows DLL
+//   SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+//
+//   // Change some options
+//   // Note: The following choices are only examples, they might not be
+//   //       suitable for your optimization problem.
+//   app->Options()->SetNumericValue("tol", 1e-8);
+//   app->Options()->SetStringValue("mu_strategy", "adaptive");
+//   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+//   app->Options()->SetStringValue("output_file", "logfile_BH.txt");
+//
+//
+//   // Intialize the IpoptApplication and process the options
+//   ApplicationReturnStatus status;
+//   status = app->Initialize();
+//   if (status != Solve_Succeeded) {
+//     printf("\n\n*** Error during initialization!\n");
+//     return ;
+//   }
+//
+//   // Ask Ipopt to solve the problem
+//   status = app->OptimizeTNLP(mynlp);
+//
+//   if (status == Solve_Succeeded) {
+//     printf("\n\n*** The problem solved!\n");
+//   }
+//   else {
+//     printf("\n\n*** The problem FAILED!\n");
+//   }
+//
+//   // As the SmartPtrs go out of scope, the reference count
+//   // will be decremented and the objects will automatically
+//   // be deleted.
+// }
 
 void testSeeds(size_t Ntries){
   int N         = 5;
@@ -359,7 +357,7 @@ void testSeeds(size_t Ntries){
 int main(){
 
   double tstep  = 1e-2;
-  double T      = 4;
+  double T      = 5.5;
 
 
   // std::vector<int> Ms = {1, 3, 5, 7};
@@ -378,8 +376,12 @@ int main(){
 
   srand ((unsigned)time(NULL));
   // runBHTestIpopt(tstep,T);
-  auto data = matchControlGradientsBH(tstep, T , 8);
-  saveData(data,"matchGradientsArma.txt");
+  std::vector<int> Mvals = {10 , 20 , 30};
+  for (auto& M : Mvals){
+    auto data = matchControlGradientsBH(tstep, T , M);
+    std::string name = "gradientsM" + std::to_string(M) + ".txt";
+    saveData(data,name);
+  }
 
   // testSeeds(100);
 

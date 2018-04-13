@@ -50,7 +50,7 @@ bool OCBoseHubbard_nlp::get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u
 
   double Umin = 2;
   double Umax = 100;
-  for (Ipopt::Index i = 0; i < bControl.getN(); i++) {
+  for (Ipopt::Index i = 0; i < m; i++) {
     g_l[i] = Umin;
     g_u[i] = Umax;
   }
@@ -96,6 +96,7 @@ bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x,
 
 bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipopt::Index m, Number* g)
 {
+  bControl.setCArray(x,n);
   bControl.convControl(g);
 
   return true;
