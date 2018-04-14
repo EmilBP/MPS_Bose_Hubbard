@@ -19,7 +19,7 @@ public:
   static std::vector<double> generateRange(double a, double b, double c);
   static std::vector<double> sigmoid(std::vector<double>& x, double k, double offset);
   static std::vector<double> linsigmoidSeed(double u_start, double u_end, size_t length);
-
+  static std::vector<double> adiabaticSeed(double u_start, double u_end, size_t length);
 };
 
 std::vector<double> SeedGenerator::linspace(double a, double b, int n){
@@ -33,7 +33,7 @@ std::vector<double> SeedGenerator::linspace(double a, double b, int n){
   return array;
 }
 
-std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
+std::vector<double> SeedGenerator::generateRange(double a, double b, double c) { //equiv to a:b:c
     std::vector<double> array;
     while(a <= c + 1e-7) {
         array.push_back(a);
@@ -79,6 +79,24 @@ std::vector<double> SeedGenerator::linsigmoidSeed(double u_start, double u_end, 
   }
 
   return x;
+}
+
+std::vector<double> SeedGenerator::adiabaticSeed(double u_start, double u_end, size_t length){
+  auto xlist  = linspace(0,100,length);
+  double p    = 3.5;
+  double k    = 1.0/3.0;
+  double xs   = 40;
+  double a    = 0.01;
+
+  for (auto& x : xlist){
+    if ( x < xs){
+      x = (p - u_start -a*xs)/(1+exp( -k * (x - xs/2.0 ))) + u_start + a*x;
+    } else {
+      x = exp(log(u_end - p + 1)/(100-xs) *(x-xs)) + p -1;
+    }
+  }
+
+  return xlist;
 }
 
 

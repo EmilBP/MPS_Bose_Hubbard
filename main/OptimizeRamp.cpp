@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
 
   auto H_BH     = HamiltonianBH(sites,J,tstep,dHorder);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
-  auto times    = generateRange(0,tstep,T);
+  auto times    = SeedGenerator::generateRange(0,tstep,T);
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH,gamma);
 
   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
