@@ -102,12 +102,15 @@ int main(int argc, char* argv[]){
 
   // Ask Ipopt to solve the problem
   status = app->OptimizeTNLP(mynlp);
+  int returnstatus;
 
   if (status == Solve_Succeeded) {
     printf("\n\n*** The problem solved!\n");
+    returnstatus = 1;
   }
   else {
     printf("\n\n*** The problem FAILED!\n");
+    returnstatus = 0;
   }
 
   // As the SmartPtrs go out of scope, the reference count
@@ -133,6 +136,16 @@ int main(int argc, char* argv[]){
     myfile.close();
   }
   else std::cout << "Unable to open file\n";
+
+  std::string filename2 = "Status.txt";
+  std::ofstream myfile2 (filename2);
+  if (myfile2.is_open())
+  {
+    myfile2 << T << "\t" << returnstatus << "\n";
+    myfile2.close();
+  }
+  else std::cout << "Unable to open file\n";
+
 
 
   return 0;
