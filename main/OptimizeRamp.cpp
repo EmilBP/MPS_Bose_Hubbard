@@ -70,8 +70,13 @@ int main(int argc, char* argv[]){
   auto times    = SeedGenerator::generateRange(0,tstep,T);
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH,gamma);
 
-  auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
+
+  // try setting random c-coeffs initially
+  // auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
+  auto u0       = SeedGenerator::linspace(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
+  auto carray   = SeedGenerator::randomCoeffSeed(-2,2,M);
+  bcontrol.setCArray(c);
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)

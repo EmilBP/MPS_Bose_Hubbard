@@ -35,8 +35,8 @@ ControlBasis ControlBasisFactory::buildCBsin(stdvec& u0, double tstep, double T,
   size_t N = u0.size();
   assert( N-(1 + T/tstep) < 1e-5 );
   arma::vec x    = arma::linspace<arma::vec>(0,100,N);
-  arma::vec S    = sigmoid(x,12.0,0.8);
-  arma::vec S2   = sigmoid(x,-12,100-0.8);
+  arma::vec S    = sigmoid(x,12.0,1.2);
+  arma::vec S2   = sigmoid(x,-12,100-1.2);
 
   for (size_t i = S.n_rows/2; i < S.n_rows; i++) {
     S(i) = S2(i);

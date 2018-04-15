@@ -48,7 +48,7 @@ bool OCBoseHubbard_nlp::get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u
     x_u[i] = 10;
 
 
-  double Umin = 2;
+  double Umin = 1.8;
   double Umax = 100;
   for (Ipopt::Index i = 0; i < m; i++) {
     g_l[i] = Umin;

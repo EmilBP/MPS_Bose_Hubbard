@@ -20,6 +20,7 @@ public:
   static std::vector<double> sigmoid(std::vector<double>& x, double k, double offset);
   static std::vector<double> linsigmoidSeed(double u_start, double u_end, size_t length);
   static std::vector<double> adiabaticSeed(double u_start, double u_end, size_t length);
+  static std::vector<double> randomCoeffSeed(double min, double max, size_t N);
 };
 
 std::vector<double> SeedGenerator::linspace(double a, double b, int n){
@@ -97,6 +98,14 @@ std::vector<double> SeedGenerator::adiabaticSeed(double u_start, double u_end, s
   }
 
   return xlist;
+}
+
+std::vector<double> randomCoeffSeed(double min, double max, size_t N){
+  std::vector<double> v;
+  for (size_t i = 0; i < N; i++) {
+    v.push_back(randomDouble(min,max));
+  }
+  return v;
 }
 
 
