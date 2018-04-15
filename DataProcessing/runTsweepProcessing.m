@@ -1,7 +1,7 @@
 clear all; close all; clc;
 
-readDirectory = '../../mnt/LinSigSeedN5fix2/';
-writeDirectory = 'Plots/LinSigSeedN5fix2/';
+readDirectory = '../../../mnt/LinSigSeedN5fix/';
+writeDirectory = '../../DataProcessing/Plots/LinSigSeedN5fix/';
 
 % processStatus(readDirectory,writeDirectory);
 
