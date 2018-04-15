@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
   auto u0       = SeedGenerator::linspace(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
   auto carray   = SeedGenerator::randomCoeffSeed(-2,2,M);
-  bcontrol.setCArray(c);
+  bControl.setCArray(carray);
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)

@@ -100,7 +100,7 @@ std::vector<double> SeedGenerator::adiabaticSeed(double u_start, double u_end, s
   return xlist;
 }
 
-std::vector<double> randomCoeffSeed(double min, double max, size_t N){
+std::vector<double> SeedGenerator::randomCoeffSeed(double min, double max, size_t N){
   std::vector<double> v;
   for (size_t i = 0; i < N; i++) {
     v.push_back(randomDouble(min,max));
