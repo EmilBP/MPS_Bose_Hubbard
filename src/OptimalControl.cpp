@@ -80,14 +80,14 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::getRegPlusRegGrad(const vec& co
   del.reserve(control.size());
 
   del.push_back(-gamma*(-5.0*control.at(1) + 4.0*control.at(2) - control.at(3)
-                  + 2.0*control.at(0))/tstep/tstep);
+                  + 2.0*control.at(0))/tstep);
 
   for (size_t i = 1; i < control.size()-1; i++) {
-    del.push_back(-gamma*(control.at(i+1) + control.at(i-1) - 2.0*control.at(i))/tstep/tstep);
+    del.push_back(-gamma*(control.at(i+1) + control.at(i-1) - 2.0*control.at(i))/tstep);
   }
 
   del.push_back( -gamma*(-5.0*control.at(control.size()-2) + 4.0*control.at(control.size()-3)
-                  - control.at(control.size()-4) + 2.0*control.at(control.size()-1))/tstep/tstep);
+                  - control.at(control.size()-4) + 2.0*control.at(control.size()-1))/tstep);
 
   return std::make_pair(reg,del);
 }
