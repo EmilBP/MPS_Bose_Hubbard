@@ -70,9 +70,6 @@ int main(int argc, char* argv[]){
   auto times    = SeedGenerator::generateRange(0,tstep,T);
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH,gamma);
 
-
-  // try setting random c-coeffs initially
-  // auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
 
@@ -93,6 +90,7 @@ int main(int argc, char* argv[]){
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
   // app->Options()->SetStringValue("output_file", "logfile_BH.txt");
+  // app->Options()->SetStringValue("derivative_test", "first-order");
 
   // Intialize the IpoptApplication and process the options
   ApplicationReturnStatus status;
