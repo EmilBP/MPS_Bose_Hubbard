@@ -124,7 +124,7 @@ inline IQMPS InitializeState(const SiteSet& sites, const int Npart, const double
   sweeps.cutoff() = 1E-9;
   sweeps.niter() = 2;
   sweeps.noise() = 1E-7,1E-8,0.0;
-  
+
   auto energy = dmrg(psi,H,sweeps,{"Quiet",true});
   return psi;
 }

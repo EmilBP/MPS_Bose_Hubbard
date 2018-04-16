@@ -178,17 +178,21 @@ matchGradients(       SiteSet sites,
   matrix result;
   auto H_BH     = HamiltonianBH(sites,J,tstep,order);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
-  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 1e-4);
 
   auto times    = generateRange(0,tstep,T);
   auto control  = linspace(cstart,cend,times.size());
+  for (auto& val : control){
+    val = sin(val);
+  }
+
   auto Agrad    = OC.getAnalyticGradient(control);
-  // auto Ngrad    = OC.getNumericGradient(control);
+  auto Ngrad    = OC.getNumericGradient(control);
 
   for (size_t i = 0; i < Agrad.second.size(); i++) {
     std::vector<double> tmp;
     tmp.push_back(Agrad.second.at(i));
-    // tmp.push_back(Ngrad.second.at(i));
+    tmp.push_back(Ngrad.second.at(i));
     // tmp.push_back( abs(Agrad.second.at(i)-Ngrad.second.at(i)) );
 
     result.push_back(tmp);
@@ -422,7 +426,6 @@ testTimeEvolution( SiteSet sites,
 {
 
   matrix result;
-
   auto times    = generateRange(0,dt,T);
   std::vector<double> control(times.size(),2.0);
   auto TEBD     = TimeStepperTEBDfast(sites,Jevol,dt,{"Cutoff=",1E-8});
@@ -497,10 +500,10 @@ int main(){
   //  Match gradients
   //
   std::vector<double> tsteps;
-  // tsteps.push_back(1e-2);
-  tsteps.push_back(1e-3);
+  tsteps.push_back(1e-2);
+  // tsteps.push_back(1e-3);
 
-  for (size_t order = 1; order <= 1; order++) {
+  for (size_t order = 0; order <= 0; order++) {
     for (auto& dt : tsteps){
       auto data = matchGradients(sites,psi_i,psi_f,dt,cstart,cend,T,J,order);
       std::string name = "Gradients_order" + std::to_string(order) + "_tstep" + std::to_string(dt) + ".txt";

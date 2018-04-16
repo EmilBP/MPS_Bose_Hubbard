@@ -210,3 +210,17 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
 
   return true;
 }
+
+
+// Ipopt::Index OCBoseHubbard_nlp::get_number_of_nonlinear_variables(){
+//   return bControl.getM();
+// }
+//
+// bool OCBoseHubbard_nlp::get_list_of_nonlinear_variables(Ipopt::Index num_nonlin_vars,
+//                                                       Ipopt::Index* pos_nonlin_vars)
+// {
+//   for (int i = 0; i < num_nonlin_vars; i++) {
+//     pos_nonlin_vars[i] = i;
+//   }
+//   return true;
+// }

@@ -36,14 +36,27 @@ void HamiltonianBH::setExpansionOrder(size_t expansionOrder_){
       // ampo += -prefactors.at(1)*J,"N",i,"Adag",i+1,"A",i;
       // ampo += prefactors.at(1)*J,"N",i+1,"Adag",i+1,"A",i;
       // ampo += -prefactors.at(1)*J,"Adag",i+1,"A",i;
-      ampo += -prefactors.at(1)*0.5*J,"N",i+1,"Adag",i,"A",i+1;
-      ampo += prefactors.at(1)*0.5*J,"N",i,"Adag",i,"A",i+1;
-      ampo += -prefactors.at(1)*0.5*J,"Adag",i,"A",i+1,"N",i+1;
-      ampo += prefactors.at(1)*0.5*J,"Adag",i,"A",i+1,"N",i;
-      ampo += -prefactors.at(1)*0.5*J,"N",i,"Adag",i+1,"A",i;
-      ampo += prefactors.at(1)*0.5*J,"N",i+1,"Adag",i+1,"A",i;
-      ampo += -prefactors.at(1)*0.5*J,"Adag",i+1,"A",i,"N",i;
-      ampo += prefactors.at(1)*0.5*J,"Adag",i+1,"A",i,"N",i+1;
+
+
+      // ampo += -prefactors.at(1)*0.5*J,"N",i+1,"Adag",i,"A",i+1;
+      // ampo += prefactors.at(1)*0.5*J,"N",i,"Adag",i,"A",i+1;
+      // ampo += -prefactors.at(1)*0.5*J,"Adag",i,"A",i+1,"N",i+1;
+      // ampo += prefactors.at(1)*0.5*J,"Adag",i,"A",i+1,"N",i;
+      // ampo += -prefactors.at(1)*0.5*J,"N",i,"Adag",i+1,"A",i;
+      // ampo += prefactors.at(1)*0.5*J,"N",i+1,"Adag",i+1,"A",i;
+      // ampo += -prefactors.at(1)*0.5*J,"Adag",i+1,"A",i,"N",i;
+      // ampo += prefactors.at(1)*0.5*J,"Adag",i+1,"A",i,"N",i+1;
+
+      auto fop = -0.5*J*prefactors.at(1);
+      ampo += fop,"N",i,"Adag",i+1,"A",i;
+      ampo += -fop,"N",i,"Adag",i,"A",i+1;
+      ampo += fop,"N",i+1,"Adag",i,"A",i+1;
+      ampo += -fop,"N",i+1,"Adag",i+1,"A",i;
+      ampo += fop,"Adag",i,"A",i+1,"N",i+1;
+      ampo += -fop,"Adag",i,"A",i+1,"N",i;
+      ampo += fop,"Adag",i+1,"A",i,"N",i;
+      ampo += -fop,"Adag",i+1,"A",i,"N",i+1;
+
     }
     if (expansionOrder >= 2) {
       // [H_J , [H,H_U]]

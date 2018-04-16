@@ -73,6 +73,11 @@ public:
                                const IpoptData* ip_data,
                                IpoptCalculatedQuantities* ip_cq);
 
+  // virtual Ipopt::Index get_number_of_nonlinear_variables();
+  //
+  // virtual bool get_list_of_nonlinear_variables(Ipopt::Index num_nonlin_vars,
+  //                                              Ipopt::Index* pos_nonlin_vars);
+
 
 };
 

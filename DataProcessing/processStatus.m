@@ -9,7 +9,7 @@ function processStatus(readDirectory, writeDirectory)
     set(0, 'defaultAxesTickLabelInterpreter','latex');
     set(0, 'defaultAxesFontSize',12);
     
-    figure
+    fig = figure
     bar(status(:,1)',status(:,2:3),'stacked')
     xlabel('Duration T')
     ylabel('Number of runs')

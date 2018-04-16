@@ -73,10 +73,8 @@ int main(int argc, char* argv[]){
 
   // try setting random c-coeffs initially
   // auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
-  auto u0       = SeedGenerator::linspace(U_i,U_f,T/tstep+1);
+  auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
   auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
-  auto carray   = SeedGenerator::randomCoeffSeed(-2,2,M);
-  bControl.setCArray(carray);
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
@@ -95,7 +93,6 @@ int main(int argc, char* argv[]){
   app->Options()->SetStringValue("mu_strategy", "adaptive");
   app->Options()->SetStringValue("hessian_approximation", "limited-memory");
   // app->Options()->SetStringValue("output_file", "logfile_BH.txt");
-
 
   // Intialize the IpoptApplication and process the options
   ApplicationReturnStatus status;
