@@ -18,15 +18,15 @@ using namespace Ipopt;
 
 using matrix = std::vector< std::vector<double> >;
 
-// std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
-//     std::vector<double> array;
-//     while(a <= c + 1e-7) {
-//         array.push_back(a);
-//         a += b;         // could recode to better handle rounding errors
-//     }
-//     return array;
-// }
-//
+std::vector<double> generateRange(double a, double b, double c) { //equiv to a:b:c
+    std::vector<double> array;
+    while(a <= c + 1e-7) {
+        array.push_back(a);
+        a += b;         // could recode to better handle rounding errors
+    }
+    return array;
+}
+
 std::vector<double> linspace(double a, double b, int n) {
     std::vector<double> array;
     double step = (b-a) / (n-1);
@@ -129,7 +129,7 @@ matrix matchControlGradientsBH( double tstep, double T, size_t M) {
 
   auto H_BH     = HamiltonianBH(sites,J,tstep,0);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
-  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 0);
+  OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH, 1e-4);
 
   auto c        = randomVec(-2,2,M);
   auto u0       = linspace(2.0,50.0,T/tstep+1);
