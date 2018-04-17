@@ -24,6 +24,7 @@ private:
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
+  vecpair storedCost_Grad;
 
   double getFidelity(const vec& control);
   double getRegularisation(const vec& control);
@@ -44,6 +45,8 @@ public:
   vecpair getNumericGradient(const ControlBasis& bControl);
   vec getFidelityForAllT(const vec& control);
   vec getFidelityForAllT(const ControlBasis& bControl);
+
+  vecpair getCostAndGradient(const ControlBasis& bControl, bool new_control);
 
   std::vector<IQMPS> getPsit() const;
   vecpair checkCostPlusFidelity(const vec& control);

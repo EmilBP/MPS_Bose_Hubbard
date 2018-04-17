@@ -82,7 +82,8 @@ bool OCBoseHubbard_nlp::eval_f(Ipopt::Index n, const Number* x, bool new_x, Numb
   if (new_x){
     bControl.setCArray(x,n);
   }
-  obj_value = optControlProb.getCost(bControl);
+
+  obj_value = optControlProb.getCostAndGradient(bControl,new_x).first;
 
   return true;
 }
@@ -92,8 +93,9 @@ bool OCBoseHubbard_nlp::eval_grad_f(Ipopt::Index n, const Number* x, bool new_x,
   if (new_x){
     bControl.setCArray(x,n);
   }
-  auto grad = optControlProb.getAnalyticGradient(bControl);
-  std::copy(grad.second.begin(), grad.second.end(), grad_f);
+
+  auto grad = optControlProb.getCostAndGradient(bControl,new_x).second;
+  std::copy(grad.begin(), grad.end(), grad_f);
 
   return true;
 }
@@ -102,7 +104,10 @@ bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipop
 {
   if (new_x){
     bControl.setCArray(x,n);
+    // must calculate cost and gradient for other eval_* functions if new_x
+    optControlProb.getCostAndGradient(bControl,new_x);
   }
+
   bControl.convControl(g);
 
   return true;
@@ -114,8 +119,10 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
 {
   if (new_x){
     bControl.setCArray(x,n);
+    // must calculate cost and gradient for other eval_* functions if new_x
+    optControlProb.getCostAndGradient(bControl,new_x);
   }
-  
+
   if (values == NULL) {
     // return the structure of the Jacobian
     // this particular Jacobian is dense

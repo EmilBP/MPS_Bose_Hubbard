@@ -247,6 +247,17 @@ std::vector<IQMPS> OptimalControl<TimeStepper,Hamiltonian>::getPsit() const{
   return psi_t;
 }
 
+template<class TimeStepper, class Hamiltonian>
+vecpair OptimalControl<TimeStepper,Hamiltonian>::getCostAndGradient(const ControlBasis& bControl,
+                                                                                bool new_control)
+{
+  if (new_control){
+    storedCost_Grad = getAnalyticGradient(bControl);
+  }
+  return storedCost_Grad;
+}
+
+
 template class OptimalControl<TimeStepperTEBD,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDfast,HamiltonianBH>;
 template class OptimalControl<TimeStepperTEBDnew,HamiltonianBH>;
