@@ -5,6 +5,7 @@ ControlBasis::ControlBasis(arma::vec& u0, arma::vec& S, arma::mat& f, double dt)
 
   constraints = (arma::diagmat(S)*f).t();
   c           = arma::zeros<arma::vec>(M);
+  ucurrent    = u0;
 }
 
 stdvec ControlBasis::getCArray() const{
@@ -39,24 +40,25 @@ void ControlBasis::getConstraintJacobian(double* array) {
 
 void ControlBasis::setCArray(const stdvec& cVec){
   // convert std::vec input to arma::vec member
-  c = arma::conv_to< arma::vec >::from(cVec);
+  c         = arma::conv_to< arma::vec >::from(cVec);
+  ucurrent  = u0+S%(f*c);
 }
 
 void ControlBasis::setCArray(const double* cArray, size_t size) {
   // convert double* input to arma::vec member
-  c = arma::vec(cArray, size);
+  c         = arma::vec(cArray, size);
+  ucurrent  = u0+S%(f*c);
 }
 
 stdvec ControlBasis::convControl() const{
   // u = u0 + S*sum(fn*cn)
   // convert output to std::vec
-  return arma::conv_to< stdvec >::from( u0+S%(f*c) );
+  return arma::conv_to< stdvec >::from( ucurrent );
 }
 
 void ControlBasis::convControl(double* u) {
   // calculate  arma::vec u and return as double*
-  arma::vec uv = u0+S%(f*c);
-  double* up = uv.memptr();
+  double* up = ucurrent.memptr();
   std::copy(up, up+N, u);
 }
 
@@ -70,7 +72,7 @@ stdvec ControlBasis::convGrad(const stdvec& gradu) const{
 
 
 void ControlBasis::exportParameters(){
-  arma::mat vecdata = arma::join_horiz( u0+S%(f*c) , u0);
+  arma::mat vecdata = arma::join_horiz( ucurrent , u0);
   vecdata = arma::join_horiz(vecdata , S);
 
   arma::mat matdata = arma::join_vert(f, c.t());
