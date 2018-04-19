@@ -21,13 +21,14 @@ private:
   Hamiltonian& hamil;
   double gamma, tstep;
   IQMPS psi_target, psi_init;
+  bool matchingPsiChi;
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
-  vecpair storedCost_Grad;
 
   double getFidelity(const vec& control);
   double getRegularisation(const vec& control);
+  vec getRegGrad(const vec& control);
   vecpair getRegPlusRegGrad(const vec& control);
   vecpair getFidelityPlusFidelityGrad(const vec& control);
   void calcPsi(const vec& control);
@@ -39,14 +40,18 @@ public:
   double getCost(const vec& control);
   vecpair getAnalyticGradient(const vec& control);
   vecpair getNumericGradient(const vec& control);
+  vec getFidelityForAllT(const vec& control);
 
   double getCost(const ControlBasis& bControl);
   vecpair getAnalyticGradient(const ControlBasis& bControl);
   vecpair getNumericGradient(const ControlBasis& bControl);
-  vec getFidelityForAllT(const vec& control);
   vec getFidelityForAllT(const ControlBasis& bControl);
 
-  vecpair getCostAndGradient(const ControlBasis& bControl, bool new_control);
+  double getCost(const vec& control, const bool new_control);
+  vec getAnalyticGradient(const vec& control, const bool new_control);
+
+  double getCost(const ControlBasis& bControl, const bool new_control);
+  vec getAnalyticGradient(const ControlBasis& bControl, const bool new_control);
 
   std::vector<IQMPS> getPsit() const;
   vecpair checkCostPlusFidelity(const vec& control);
