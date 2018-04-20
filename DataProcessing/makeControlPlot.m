@@ -33,8 +33,8 @@ function fig = makeControlPlot(controlData)
 
     yyaxis right
     hold on
-    p2(1) = plot(time,0.5*(1-Ff),'-','Color',co(1,:));
-    p2(2) = plot(time,0.5*(1-Fi),'--','Color',co(1,:));
+    p2(1) = plot(time,(1-Ff),'-','Color',co(1,:));
+    p2(2) = plot(time,(1-Fi),'--','Color',co(1,:));
 
     xlim([0 time(end)])
     ylabel('Infidelity')
