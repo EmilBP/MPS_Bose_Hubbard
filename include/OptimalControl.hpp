@@ -21,7 +21,6 @@ private:
   Hamiltonian& hamil;
   double gamma, tstep;
   IQMPS psi_target, psi_init;
-  bool matchingPsiChi;
 
   std::vector<IQMPS> psi_t;
   std::vector<IQMPS> chi_t;
@@ -52,6 +51,7 @@ public:
 
   double getCost(const ControlBasis& bControl, const bool new_control);
   vec getAnalyticGradient(const ControlBasis& bControl, const bool new_control);
+  void calcPsi(const ControlBasis& bControl);
 
   std::vector<IQMPS> getPsit() const;
   vecpair checkCostPlusFidelity(const vec& control);

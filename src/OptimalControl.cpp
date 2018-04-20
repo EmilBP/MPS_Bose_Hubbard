@@ -8,7 +8,6 @@ template<class TimeStepper, class Hamiltonian>
 OptimalControl<TimeStepper,Hamiltonian>::OptimalControl(IQMPS& psi_target, IQMPS& psi_init, TimeStepper& timeStepper, Hamiltonian& hamil, double gamma)
   : psi_target(psi_target), psi_init(psi_init), gamma(gamma), timeStepper(timeStepper), hamil(hamil), tstep(timeStepper.getTstep())
 {
-  matchingPsiChi = false;
 }
 
 template<class TimeStepper, class Hamiltonian>
@@ -261,28 +260,23 @@ double OptimalControl<TimeStepper,Hamiltonian>::getCost(const vec& control, cons
 {
   if (new_control) {
     calcPsi(control);
-    matchingPsiChi = false;
   }
+
   double re, im;
   overlap(psi_target,psi_t.back(),re,im);
 
-  return 0.5*(1-re*re+im*im) + getRegularisation(control);
+  return 0.5*(1.0-(re*re+im*im)) + getRegularisation(control);
 }
 
 template<class TimeStepper, class Hamiltonian>
 vec OptimalControl<TimeStepper,Hamiltonian>::getAnalyticGradient(const vec& control, const bool new_control)
 {
   if (new_control) {
-    matchingPsiChi = true;
     return getAnalyticGradient(control).second;
   }
-  else{
-
-    if (!matchingPsiChi) {
-      calcChi(control);
-      matchingPsiChi = true;
-    }
-
+  else
+  {
+    calcChi(control);
     auto res = getRegGrad(control);
     auto overlapFactor = overlapC(psi_t.back(),psi_target);
     size_t i = 0;
@@ -305,6 +299,12 @@ template<class TimeStepper, class Hamiltonian>
 vec OptimalControl<TimeStepper,Hamiltonian>::getAnalyticGradient(const ControlBasis& bControl, const bool new_control)
 {
   return bControl.convGrad(getAnalyticGradient(bControl.convControl(),new_control));
+}
+
+template<class TimeStepper, class Hamiltonian>
+void OptimalControl<TimeStepper,Hamiltonian>::calcPsi(const ControlBasis& bControl)
+{
+  calcPsi(bControl.convControl());
 }
 
 

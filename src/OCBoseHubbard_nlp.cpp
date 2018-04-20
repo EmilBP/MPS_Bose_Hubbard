@@ -105,7 +105,7 @@ bool OCBoseHubbard_nlp::eval_g(Ipopt::Index n, const Number* x, bool new_x, Ipop
   if (new_x){
     bControl.setCArray(x,n);
     // must calculate psi_t for other eval_* functions if new_x
-    optControlProb.getCost(bControl,new_x);
+    optControlProb.calcPsi(bControl);
   }
 
   bControl.convControl(g);
@@ -120,7 +120,7 @@ bool OCBoseHubbard_nlp::eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
   if (new_x){
     bControl.setCArray(x,n);
     // must calculate psi_t for other eval_* functions if new_x
-    optControlProb.getCost(bControl,new_x);
+    optControlProb.calcPsi(bControl);
   }
 
   if (values == NULL) {
