@@ -14,7 +14,7 @@ function processCacheData(readDirectory, writeDirectory, duration)
     fig = makeIterationPlot(iterData,legtext);
     
     % save figure 
-    figname = [writeDirectory 'CostProgress'];
+    figname = [writeDirectory 'CostProgressT' num2str(duration)];
     fig.PaperPositionMode = 'auto';
     fig_pos = fig.PaperPosition;
     fig.PaperSize = [fig_pos(3) fig_pos(4)];
