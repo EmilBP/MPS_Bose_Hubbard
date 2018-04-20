@@ -16,6 +16,7 @@ private:
   arma::vec u0;
   arma::vec S;
   arma::vec c;
+  arma::vec ucurrent;
   arma::mat f;
   arma::mat ft;
   arma::mat constraints;

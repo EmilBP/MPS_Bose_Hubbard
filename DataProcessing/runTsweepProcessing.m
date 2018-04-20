@@ -5,7 +5,9 @@ writeDirectory = '../../DataProcessing/Plots/LinSigSeedN5fix3/';
 
 % processStatus(readDirectory,writeDirectory);
 
+
 processBestSolutions(readDirectory,writeDirectory)
+
 processFidelityData(readDirectory,writeDirectory);
 
 
