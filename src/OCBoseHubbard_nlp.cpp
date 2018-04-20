@@ -209,14 +209,14 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
     outfile.open(filename, std::ios_base::app);
     if (outfile.is_open())
     {
-      auto control = bControl.convControl();
+      auto control = bControl.getCArray();
 
       outfile << iter << "\t";
       outfile << obj_value << "\t";
       outfile << times.back() << "\t";
 
-      for (auto& u : control) {
-        outfile << u << "\t";
+      for (auto& c : control) {
+        outfile << c << "\t";
       }
       outfile << "\n";
 
