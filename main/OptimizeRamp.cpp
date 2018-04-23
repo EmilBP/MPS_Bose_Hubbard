@@ -62,16 +62,15 @@ int main(int argc, char* argv[]){
 
 
   auto sites    = Boson(N,locDim);
-  auto psi_i    = InitializeState(sites,Npart,J,U_i);
-  auto psi_f    = InitializeState(sites,Npart,J,U_f);
+  auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
+  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
+  auto psi_i    = InitializeState(sites,Npart,J,u0.front());
+  auto psi_f    = InitializeState(sites,Npart,J,u0.back());
 
   auto H_BH     = HamiltonianBH(sites,J,tstep,dHorder);
   auto TEBD     = TimeStepperTEBDfast(sites,J,tstep,{"Cutoff=",1E-8});
   auto times    = SeedGenerator::generateRange(0,tstep,T);
   OptimalControl<TimeStepperTEBDfast,HamiltonianBH> OC(psi_f,psi_i,TEBD,H_BH,gamma);
-
-  auto u0       = SeedGenerator::linsigmoidSeed(U_i,U_f,T/tstep+1);
-  auto bControl = ControlBasisFactory::buildCBsin(u0,tstep,T,M);
 
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
