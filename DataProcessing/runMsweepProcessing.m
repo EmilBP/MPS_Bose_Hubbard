@@ -1,31 +1,38 @@
 function main()
     clear all; close all; clc;
     
+    Mlist = 5:40;
+    prefix = 620717:620717+length(Mlist);
+    
     readDirectory = '../../../mnt/LinSigSeedN5MSweep/';
     writeDirectory = '../../DataProcessing/Plots/LinSigSeedN5MSweep/';
     
-    processData(readDirectory,writeDirectory);
+    processData(readDirectory,writeDirectory,Mlist,prefix);
 end
 
-function processData(readDirectory, writeDirectory)
+function processData(readDirectory, writeDirectory,BasisSize,prefix)
 
-    % extract data
-    [BasisSize, prefix] = extractBasisSize(readDirectory);
-    
+    PlotData = [BasisSize', zeros(length(BasisSize),4)];
+
     for i = 1:length(BasisSize)
         % find data for M = BasisSize(i)
-        searchstr = [prefix{i} '*BHrampInitialFinal.txt'];
-        Files = dir( searchstr ); 
+        searchstr = [readDirectory num2str(prefix(i)) '*BHrampInitialFinal.txt'];
+        Files = dir( searchstr );
+        FData = zeros(1,length(Files));
         for k = 1:length(Files)
-            filename            = [readDirectory Files(k).name];
-            fidData             = dlmread(filename);
-            FData(i,k)   = fidData(end,end);
+            filename     = [readDirectory Files(k).name];
+            fidData      = dlmread(filename);
+            FData(k)     = fidData(end,end);
         end
+        
+        PlotData(i,2) = median(FData);
+        PlotData(i,3) = prctile(FData,25);
+        PlotData(i,4) = prctile(FData,75);
+        PlotData(i,5) = max(FData);
+        
+        [i , length(Files)]
     end    
     
-    PlotData = [BasisSize, median(FData,2), ...
-                prctile(FData,25,2),prctile(FData,75,2), ...
-                max(FData,[],2)];
     
     % plot data
     legtext = {'GROUP'};
@@ -37,7 +44,7 @@ function processData(readDirectory, writeDirectory)
     fig_pos = fig.PaperPosition;
     fig.PaperSize = [fig_pos(3) fig_pos(4)];
     print(fig,figname,'-dpdf','-bestfit') 
-
+    savefig(fig,figname)
 end
 
 function [BasisSize , prefix] = extractBasisSize(directory)

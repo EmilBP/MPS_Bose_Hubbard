@@ -1,7 +1,7 @@
 function processCacheData(readDirectory, writeDirectory, duration)
 
     % extract cache data at duration T
-    [iter , cost, ~] = extractChacheAtDuration(readDirectory,duration);
+    [iter , cost] = extractChacheAtDuration(readDirectory,duration);
     
     % prepare data for iteration vs cost plot
     iterData(:,1) = iter;
@@ -15,6 +15,7 @@ function processCacheData(readDirectory, writeDirectory, duration)
     
     % save figure 
     figname = [writeDirectory 'CostProgressT' num2str(duration)];
+    savefig(fig,figname)
     fig.PaperPositionMode = 'auto';
     fig_pos = fig.PaperPosition;
     fig.PaperSize = [fig_pos(3) fig_pos(4)];

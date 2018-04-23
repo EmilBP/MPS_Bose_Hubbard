@@ -38,6 +38,9 @@ function fig = makeIterationPlot(data,legendEntries)
     ylabel('Cost J')
     set(gca,'YScale','log')
     
+    xlim([0 , 1250])
+    ylim([0.5*min(algdata(:,2)) , 1])
+    
     legend(p,legendEntries)
 
 end

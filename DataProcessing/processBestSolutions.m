@@ -48,14 +48,16 @@ function processBestSolutions(readDirectory, writeDirectory)
         fig.PaperPositionMode = 'auto';
         fig_pos = fig.PaperPosition;
         fig.PaperSize = [fig_pos(3) fig_pos(4)];
-        print(fig,figname,'-dpdf','-bestfit') 
+        print(fig,figname,'-dpdf','-bestfit')
+        savefig(fig,figname)
         
         fig = hC(i);
         figname = [ writeDirectory 'OptimalRamp_T' num2str(uv(i)) ];
         fig.PaperPositionMode = 'auto';
         fig_pos = fig.PaperPosition;
         fig.PaperSize = [fig_pos(3) fig_pos(4)];
-        print(fig,figname,'-dpdf','-bestfit') 
+        print(fig,figname,'-dpdf','-bestfit')
+        savefig(fig,figname)
     end
     
 end
