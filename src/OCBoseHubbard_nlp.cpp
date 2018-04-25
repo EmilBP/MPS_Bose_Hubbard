@@ -209,16 +209,10 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
     outfile.open(filename, std::ios_base::app);
     if (outfile.is_open())
     {
-      auto control = bControl.getCArray();
-
       outfile << iter << "\t";
       outfile << obj_value << "\t";
       outfile << times.back() << "\t";
-
-      for (auto& c : control) {
-        outfile << c << "\t";
-      }
-      outfile << "\n";
+      outfile << 2*(times.size()-1) + ls_trials*(times.size()-1) << "\n";
 
     }
     else std::cout << "Unable to open file\n";
