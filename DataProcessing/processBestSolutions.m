@@ -28,7 +28,7 @@ function processBestSolutions(readDirectory, writeDirectory)
         for k = 1:length(Files)
             filename    = [readDirectory Files(k).name];
             expNData    = dlmread(filename);
-            hN(i)       = makeExpNumberPlot(expNData);
+%             hN(i)       = makeExpNumberPlot(expNData);
         end
         
         % plot control and infidelity for best solutions
@@ -37,27 +37,39 @@ function processBestSolutions(readDirectory, writeDirectory)
         for k = 1:length(Files)
             filename    =  [readDirectory Files(k).name];
             controlData = dlmread(filename);
-            hC(i)       = makeControlPlot(controlData);
+%             hC(i)       = makeControlPlot(controlData);
         end
+        
+        hNC(i) = makeRampPlot(expNData,controlData);
+        disp(['Best solution for T = ' num2str(uv(i)) ' has ID ' erase(fnlist{index},readDirectory)])
+        pause(0.3)
     end    
 
     % save figures 
     for i = 1:nu
-        fig = hN(i);
-        figname = [ writeDirectory 'ExpectedN_T' num2str(uv(i)) ];
-        fig.PaperPositionMode = 'auto';
-        fig_pos = fig.PaperPosition;
-        fig.PaperSize = [fig_pos(3) fig_pos(4)];
-        print(fig,figname,'-dpdf','-bestfit')
-        savefig(fig,figname)
+%         fig = hN(i);
+%         figname = [ writeDirectory 'ExpectedN_T' num2str(uv(i)) ];
+%         fig.PaperPositionMode = 'auto';
+%         fig_pos = fig.PaperPosition;
+%         fig.PaperSize = [fig_pos(3) fig_pos(4)];
+%         print(fig,figname,'-dpdf','-bestfit')
+%         savefig(fig,figname)
         
-        fig = hC(i);
-        figname = [ writeDirectory 'OptimalRamp_T' num2str(uv(i)) ];
+%         fig = hC(i);
+%         figname = [ writeDirectory 'OptimalRamp_T' num2str(uv(i)) ];
+%         fig.PaperPositionMode = 'auto';
+%         fig_pos = fig.PaperPosition;
+%         fig.PaperSize = [fig_pos(3) fig_pos(4)];
+%         print(fig,figname,'-dpdf','-bestfit')
+%         savefig(fig,figname)
+        
+        fig = hNC(i);
+        figname = [ writeDirectory 'RampPlot_T' num2str(uv(i)) ];
         fig.PaperPositionMode = 'auto';
         fig_pos = fig.PaperPosition;
         fig.PaperSize = [fig_pos(3) fig_pos(4)];
         print(fig,figname,'-dpdf','-bestfit')
-        savefig(fig,figname)
+%         savefig(fig,figname)
     end
     
 end

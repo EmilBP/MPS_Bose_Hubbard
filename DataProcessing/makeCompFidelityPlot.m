@@ -42,7 +42,7 @@ function fig = makeCompFidelityPlot(data,legendEntries)
     %set(gca, 'YScale', 'log')
     
 %     xlabel('Duration T')
-    ylabel('Fidelity F')
+    ylabel('Fidelity $F$')
     
     legend(p,legendEntries,'Location','SouthEast')
 
@@ -58,8 +58,8 @@ function fig = makeCompFidelityPlot(data,legendEntries)
         plot(T,1-algdata(:,4),'Linewidth',2,'Color',color);
     end
     
-    xlabel('Duration T')
-    ylabel('Infidelity 1-F')
+    xlabel('Duration $T$')
+    ylabel('Infidelity $1-F$')
     limsy=get(gca,'YLim');
     set(gca,'Ylim',[1e-4 0.8*1e-1]);
     yticks([1e-4 1e-3 1e-2])

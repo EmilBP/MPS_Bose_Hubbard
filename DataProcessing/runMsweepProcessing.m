@@ -1,11 +1,11 @@
 function main()
     clear all; close all; clc;
     
-    Mlist = 5:40;
-    prefix = 620717:620717+length(Mlist);
+    Mlist = 5:32;
+    prefix = 640480:640480+length(Mlist);
     
-    readDirectory = '../../../mnt/LinSigSeedN5MSweep/';
-    writeDirectory = '../../DataProcessing/Plots/LinSigSeedN5MSweep/';
+    readDirectory = '../../../mnt/LinSigSeedN5MSweepT2.5/';
+    writeDirectory = '../../DataProcessing/Plots/LinSigSeedN5MSweepT2.5/';
     
     processData(readDirectory,writeDirectory,Mlist,prefix);
 end
