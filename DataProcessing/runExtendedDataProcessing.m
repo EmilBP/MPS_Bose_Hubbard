@@ -5,7 +5,7 @@ function main()
     readDirectory = '../../../mnt/LinSigSeedN5fix3/';
     writeDirectory = '../../DataProcessing/Plots/LinSigSeedN5fix3/';
 
-    Durations = {'2.0'};
+    Durations = {'1.0','2.0','2.5','3.0','4.0'};
     
     for i = 1:length(Durations)
         expNData = dlmread( [readDirectory 'ExpectationN_extendedT' Durations{i} '.txt'] );
@@ -61,38 +61,43 @@ function fig = makeExtendedRampPlot(expNData,controlData)
     hold on
     box on
     
-    imagesc('XData',time,'YData',ni,'CData',expN');
+
+    x = parula(301);
+    offset = 5;
+    mid = ceil(length(x)/2);
+    x1 = x(1:mid-offset,:);
+    x2 = x(mid+offset:end,:);
+
+    
+    custommap = [x1 ; x(mid,:) ; x2 ];
+    colormap(custommap)
+
+    cticklab    = 0.8:0.1:1.2;
+   
+    
+    scaledData  = symmetricLogScale(expN , 1);
+    scaledcaxis = symmetricLogScale([0.8 , 1.2] , 1);
+    scaledctick = symmetricLogScale(cticklab , 1);
+    
+    imagesc('XData',time,'YData',ni,'CData',scaledData');
     xlim([time(1) , time(end)])
     ylim([ni(1)-0.5 , ni(end)+0.5])
     ylabel('Lattice Site')
     yticks(ni)
     
-    x = parula(211);
-    %     index = true(1, size(x, 1));
-    %     index([15:2:23 , 25:27 , 29:32 , 34:37  , 39:41 , 43:2:51]) = false;
-    %     custommap = x(index, :);
-
-    x1 = x(1:100,:);
-    x2 = x(112:211,:);
-    x1int = interp1(1:100,x1,logspace(0,2,150));
-    x2int = interp1(1:100,flipud(x2),logspace(0,2,150));
-    custommap = [ x1int ; x(106,:) ;  flipud(x2int)];
-
-    colormap(custommap)
-
-    c = colorbar;
-    caxis([0.8 1.2])
+    caxis(scaledcaxis)
+    h_c = colorbar('YTick',scaledctick,'YTickLabel',cticklab);
+    h_c.Ruler.MinorTick = 'on';
     
     
-    plot([T,T], [ni(1)-0.5 , ni(end)+0.5],'--','Color',co(2,:));
-
+    plot([T,T], [ni(1)-0.5 , ni(end)+0.5],'--','Color',co(2,:),'LineWidth',1.5);
   
     
     subplot(2,1,2)
     box on
     hold on
 
-    plot([T,T], [0, 55],'--','Color',co(2,:));
+    plot([T,T], [0, 55],'--','Color',co(2,:),'LineWidth',1.5);
     p1(1) = plot(time,uf,'k-','LineWidth',2);
     p1(2) = plot(time,ui,'k--','LineWidth',2);
     
@@ -101,6 +106,9 @@ function fig = makeExtendedRampPlot(expNData,controlData)
 
     xlim([time(1) , time(end)])
     ylim([0 , 55])
+    
+    yticks(0:10:50)
+    
     
     annotation(gcf,'textbox',...
     [0.022304084595696 0.873777279000283 0.0305186246418337 0.0547703180212016],...
@@ -112,7 +120,7 @@ function fig = makeExtendedRampPlot(expNData,controlData)
     'FitBoxToText','off');
     
     annotation(gcf,'textbox',...
-    [0.022536928251765 0.468197879858652 0.0305186246418337 0.0547703180212017],...
+    [0.022304084595696 0.468197879858652 0.0305186246418337 0.0547703180212017],...
     'String','(\textbf{b})',...
     'LineStyle','none',...
     'Interpreter','latex',...
@@ -147,4 +155,19 @@ function fig = makeExtendedRampPlot(expNData,controlData)
     end
     
     legend(p1,'Final','Initial','Location','west')
+end
+
+function scaledData = symmetricLogScale(data,center)
+    
+    below       = data.*(data < center);
+    above       = data.*(data >= center);
+    
+    below       = below + ones(size(below)).*(below == 0);
+    above       = above + ones(size(above)).*(above == 0);
+    
+    below       = abs(below-center)+center;
+    
+    abovelog    = log10(above);
+    belowlog    = log10(below);
+    scaledData  = abovelog-belowlog;
 end

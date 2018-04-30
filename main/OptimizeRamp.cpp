@@ -136,14 +136,14 @@ int main(int argc, char* argv[]){
   }
   else std::cout << "Unable to open file\n";
 
-  std::string filename2 = "Status.txt";
-  std::ofstream myfile2 (filename2);
-  if (myfile2.is_open())
-  {
-    myfile2 << T << "\t" << returnstatus << "\n";
-    myfile2.close();
-  }
-  else std::cout << "Unable to open file\n";
+  // std::string filename2 = "Status.txt";
+  // std::ofstream myfile2 (filename2);
+  // if (myfile2.is_open())
+  // {
+  //   myfile2 << T << "\t" << returnstatus << "\n";
+  //   myfile2.close();
+  // }
+  // else std::cout << "Unable to open file\n";
 
 
 

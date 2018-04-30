@@ -204,8 +204,6 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
   // save current control and cost to file
   if (cacheProgress) {
 
-    auto control = bControl.getCArray();
-
     std::ofstream outfile;
     std::string filename = "ProgressCache.txt";
     outfile.open(filename, std::ios_base::app);
@@ -214,12 +212,8 @@ bool OCBoseHubbard_nlp::intermediate_callback(AlgorithmMode mode,
       outfile << iter << "\t";
       outfile << obj_value << "\t";
       outfile << times.back() << "\t";
-      outfile << 2*(times.size()-1) + ls_trials*(times.size()-1) << "\t";
+      outfile << 2 + ls_trials << "\n";
 
-      for (auto& val : control){
-        outfile << val << "\t";
-      }
-      outfile << "\n";
     }
     else std::cout << "Unable to open file\n";
 
