@@ -103,18 +103,24 @@ vecpair OptimalControl<TimeStepper,Hamiltonian>::getRegPlusRegGrad(const vec& co
 template<class TimeStepper, class Hamiltonian>
 vecpair OptimalControl<TimeStepper,Hamiltonian>::getFidelityPlusFidelityGrad(const vec& control){
 
-
   std::vector<double> g;
   g.reserve(control.size());
 
   calcPsi(control);
-  calcChi(control);
 
+
+  auto chi = Cplx_i*psi_target;
   auto overlapFactor = overlapC(psi_t.back(),psi_target);
 
-  for (size_t i = 0; i < control.size(); i++) {
-    g.push_back( -(overlapC( chi_t.at(i) , hamil.dHdU(control.at(i)) , psi_t.at(i) )*overlapFactor ).real() );
+
+  g.push_back( -(overlapC( chi , hamil.dHdU(control.back()) , psi_t.back() )*overlapFactor ).real() );
+
+  for (size_t i = control.size()-1; i > 0; i--) {
+    timeStepper.step(chi,control.at(i),control.at(i-1),false);
+    g.push_back( -(overlapC( chi , hamil.dHdU(control.at(i-1)) , psi_t.at(i-1) )*overlapFactor ).real() );
   }
+
+  std::reverse(g.begin(),g.end());
 
   double re, im;
   overlap(psi_target,psi_t.back(),re,im);
@@ -276,13 +282,16 @@ vec OptimalControl<TimeStepper,Hamiltonian>::getAnalyticGradient(const vec& cont
   }
   else
   {
-    calcChi(control);
+
     auto res = getRegGrad(control);
+    auto chi = Cplx_i*psi_target;
     auto overlapFactor = overlapC(psi_t.back(),psi_target);
-    size_t i = 0;
-    for (auto& val : res){
-      val += -(overlapC( chi_t.at(i) , hamil.dHdU(control.at(i)) , psi_t.at(i) )*overlapFactor ).real();
-      i++;
+
+    res.back() += -(overlapC( chi , hamil.dHdU(control.back()) , psi_t.back() )*overlapFactor ).real();
+
+    for (size_t i = control.size()-1; i > 0; i--) {
+      timeStepper.step(chi,control.at(i),control.at(i-1),false);
+      res.at(i-1) += -(overlapC( chi , hamil.dHdU(control.at(i-1)) , psi_t.at(i-1) )*overlapFactor ).real();
     }
 
     return res;
